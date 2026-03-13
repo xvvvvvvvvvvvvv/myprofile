@@ -1,23 +1,20 @@
+
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://api.xiaowei.dev/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "https://api.xiaowei.dev/api/$1"
     },
     {
-      "source": "/admin/:path*",
-      "destination": "https://api.xiaowei.dev/admin/:path*"
+      "source": "/admin/(.*)",
+      "destination": "https://api.xiaowei.dev/admin/$1"
     },
     {
-      "source": "/static/:path*",
-      "destination": "https://api.xiaowei.dev/static/:path*"
+      "source": "/static/admin/(.*)",
+      "destination": "https://api.xiaowei.dev/static/admin/$1"
     },
     {
-      "source": "/media/:path*",
-      "destination": "https://api.xiaowei.dev/media/:path*"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!api|admin|static).*)",
       "destination": "/index.html"
     }
   ]
