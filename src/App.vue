@@ -374,4 +374,77 @@ onUnmounted(() => {
   opacity: 0;
   transform: translateY(30px) scale(0.8);
 }
+
+/* ================== 📱 移动端响应式适配 ================== */
+
+/* 平板 & 常规手机 (最大宽度 768px) */
+@media screen and (max-width: 768px) {
+  /* 1. 头部缩减间距，稍微降低高度 */
+  .premium-nav-header {
+    padding: 0 16px;
+    height: 60px;
+  }
+
+  /* 2. 隐藏次要文本（副标题、分隔线） */
+  .logo-tagline, 
+  .header-left .divider {
+    display: none;
+  }
+
+  /* 3. 状态栏精简（隐藏 OpenClaw: Online） */
+  .system-status-board {
+    padding: 4px 10px;
+    gap: 8px;
+  }
+  .status-text:not(.speech-text),
+  .status-divider {
+    display: none; 
+  }
+
+  /* 4. 限制语录宽度，超出显示省略号，防止撑爆屏幕 */
+  .speech-text {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+
+  /* 5. 悬浮工具箱贴近边缘，优化触控区域 */
+  .floating-toolbox {
+    right: 20px;
+    bottom: 20px; /* 移动端标准边距 */
+    /* 处理 iOS 底部安全区 */
+    bottom: env(safe-area-inset-bottom, 20px); 
+  }
+
+  /* 6. 移动端没有鼠标，直接隐藏 Hover 提示框 */
+  .tool-tooltip {
+    display: none !important;
+  }
+
+  /* 7. 稍微缩小工具按钮 */
+  .main-fab {
+    width: 56px;
+    height: 56px;
+  }
+  .tool-item {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* 极小屏幕手机 (如 iPhone SE, 最大宽度 400px) */
+@media screen and (max-width: 400px) {
+  /* 屏幕太小了，把虾小毛的话也藏起来，只留表情包和呼吸灯 */
+  .speech-text {
+    display: none;
+  }
+  .lobster-icon {
+    font-size: 18px; /* 稍微放大一点表情，方便点击 */
+  }
+  .logo {
+    font-size: 1.25rem; /* Logo 稍微缩小 */
+  }
+}
 </style>
