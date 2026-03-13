@@ -5,7 +5,15 @@
       "destination": "https://api.xiaowei.dev/api/$1"
     },
     {
-      "source": "/((?!api).*)",
+      "source": "/admin/(.*)",
+      "destination": "https://api.xiaowei.dev/admin/$1"
+    },
+    {
+      "source": "/static/admin/(.*)",
+      "destination": "https://api.xiaowei.dev/static/admin/$1"
+    },
+    {
+      "source": "/((?!api|admin|static).*)",
       "destination": "/index.html"
     }
   ]
