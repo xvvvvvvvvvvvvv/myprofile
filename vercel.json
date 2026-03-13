@@ -1,4 +1,3 @@
-
 {
   "rewrites": [
     {
@@ -10,11 +9,15 @@
       "destination": "https://api.xiaowei.dev/admin/$1"
     },
     {
-      "source": "/static/admin/(.*)",
-      "destination": "https://api.xiaowei.dev/static/admin/$1"
+      "source": "/static/(.*)",
+      "destination": "https://api.xiaowei.dev/static/$1"
     },
     {
-      "source": "/((?!api|admin|static).*)",
+      "source": "/media/(.*)",
+      "destination": "https://api.xiaowei.dev/media/$1"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
