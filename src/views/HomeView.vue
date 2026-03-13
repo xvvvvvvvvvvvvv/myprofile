@@ -116,7 +116,7 @@ onMounted(() => {
                 </div>
                 <p class="bio-text">
                   拥有 7 年实战经验的后端开发者。专注于构建高并发任务调度中台、异构数据聚合系统与自动化运维架构。
-                  不仅精通 Django/Flask 企业级开发，更热衷于 <strong class="highlight-text">边缘 AI Agent</strong>、<strong class="highlight-text">Web3 量化交易</strong> 及 <strong>OpenClaw</strong> 等前沿技术的落地实践。
+                  不仅精通 Django/Flask 企业级开发，更热衷于 <strong class="highlight-text">边缘 AI Agent</strong>、<strong class="highlight-text">Web3 量化交易</strong> 及 <strong>OpenClaw</strong> 等前沿技术的落地实践
                 </p>
               </div>
 
