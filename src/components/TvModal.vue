@@ -120,7 +120,7 @@ const handleCallOpenClaw = async () => {
   scrollToBottom()
 
   try {
-    const response = await fetch('/api/send_to_openclaw/', { // 🌟 确保路由与 Django 对应
+    const response = await fetch('/api/portfolio/openclaw/send/', { // 🌟 确保路由与 Django 对应
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
