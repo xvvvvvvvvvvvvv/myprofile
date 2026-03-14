@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
-import { NModal, NInput, NButton } from 'naive-ui'
+import { NModal, NInput } from 'naive-ui'
 
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', val: boolean): void }>()
@@ -12,7 +12,7 @@ const chatContainerRef = ref<HTMLElement | null>(null)
 // 获取输入框 DOM，用于结束时自动聚焦
 const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 
-// 🌟 新增：生成或获取当前访客的专属 Session ID (缓存在浏览器，刷新不丢失)
+// 生成或获取当前访客的专属 Session ID (缓存在浏览器，刷新不丢失)
 const getOrCreateSessionId = () => {
   let sid = sessionStorage.getItem('guest_session_id')
   if (!sid) {
@@ -54,13 +54,12 @@ const sendQuickMessage = (text: string) => {
   handleCallOpenClaw()
 }
 
-// 🌟 核心修复：解决拼音输入法下敲回车直接发送的逆天 Bug
+// 解决拼音输入法下敲回车直接发送的 Bug
 const handleEnter = (e: KeyboardEvent) => {
-  // 如果输入法正在拼写汉字，或者 keyCode 是 229 (中文输入法特征)，直接拦截，不发送！
   if (e.isComposing || e.keyCode === 229) {
     return
   }
-  e.preventDefault() // 阻止默认换行
+  e.preventDefault() 
   handleCallOpenClaw()
 }
 
@@ -69,21 +68,18 @@ const handleCallOpenClaw = async () => {
   if (!searchQuery.value.trim() || isSearching.value) return
   
   const userText = searchQuery.value
-  searchQuery.value = '' // 清空输入框
+  searchQuery.value = '' 
   isSearching.value = true
 
-  // 在修改 UI 之前，先把历史对话提取并格式化成大模型认识的数组
   const historyPayload = messageList.value
-    .filter(m => !m.isError && m.content) // 过滤掉报错信息和空消息
+    .filter(m => !m.isError && m.content) 
     .map(m => ({
-      role: m.role === 'ai' ? 'assistant' : 'user', // 把 'ai' 映射为标准的 'assistant'
+      role: m.role === 'ai' ? 'assistant' : 'user', 
       content: m.content
     }))
   
-  // 把当前用户的新问题也塞进历史数组准备发送
   historyPayload.push({ role: 'user', content: userText })
 
-  // 1. UI 层面：把用户的话推入页面消息列表
   messageList.value.push({
     id: Date.now(),
     role: 'user',
@@ -91,7 +87,6 @@ const handleCallOpenClaw = async () => {
   })
   scrollToBottom()
 
-  // 2. UI 层面：预先推入一个空的 AI 消息，准备接水管
   const aiMessageId = Date.now() + 1
   messageList.value.push({
     id: aiMessageId,
@@ -101,14 +96,13 @@ const handleCallOpenClaw = async () => {
   scrollToBottom()
 
   try {
-    // 发送增强版的 Payload（带上历史记录和 Session ID）
     const response = await fetch('/api/portfolio/openclaw/send/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         command: userText, 
-        messages: historyPayload, // 全量历史上下文
-        sessionId: sessionId.value // 访客专属 ID
+        messages: historyPayload, 
+        sessionId: sessionId.value 
       }) 
     })
 
@@ -137,7 +131,6 @@ const handleCallOpenClaw = async () => {
 
             try {
               const data = JSON.parse(dataStr)
-              // 找到刚才占位的 AI 消息体
               const currentAiMsg = messageList.value.find(m => m.id === aiMessageId)
               
               if (currentAiMsg) {
@@ -164,19 +157,23 @@ const handleCallOpenClaw = async () => {
     }
   } finally {
     isSearching.value = false
-    // 消息返回完毕后，自动让输入框重新获得焦点
     nextTick(() => {
-      inputRef.value?.focus()
+      // 在移动端自动唤起键盘体验不好，这里判断如果不是移动端再聚焦
+      if (window.innerWidth > 768) {
+        inputRef.value?.focus()
+      }
     })
   }
 }
 
-// 弹窗关闭时可以不清空，保留历史记录，体验更好
 watch(() => props.show, (newVal) => {
   if (newVal) {
     scrollToBottom()
-    // 弹窗打开时也自动聚焦
-    setTimeout(() => inputRef.value?.focus(), 300)
+    setTimeout(() => {
+      if (window.innerWidth > 768) {
+        inputRef.value?.focus()
+      }
+    }, 300)
   }
 })
 </script>
@@ -194,8 +191,11 @@ watch(() => props.show, (newVal) => {
           <div class="status-dot"></div>
           <span class="header-title">Guest-Bot 终端</span>
         </div>
-        <div class="tech-badge">
-          <span class="fw-bold">OpenClaw</span> 驱动
+        <div class="header-right">
+          <div class="tech-badge hide-on-mobile">
+            <span class="fw-bold">OpenClaw</span> 驱动
+          </div>
+          <div class="close-btn" @click="emit('update:show', false)">✕</div>
         </div>
       </div>
 
@@ -224,7 +224,7 @@ watch(() => props.show, (newVal) => {
       </div>
 
       <div class="chat-footer-wrapper">
-        <div class="quick-messages" v-if="!isSearching && messageList.length === 0">
+        <div class="quick-messages" v-if="!isSearching">
           <span 
             v-for="(msg, idx) in quickMessages" 
             :key="idx"
@@ -268,10 +268,10 @@ watch(() => props.show, (newVal) => {
 
 /* ================== 外壳与毛玻璃布局 ================== */
 .chat-casing {
-  width: 800px;
+  width: calc(100vw - 32px);
+  max-width: 800px;
   height: 85vh; 
   max-height: 850px;
-  /* macOS 毛玻璃质感 */
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
@@ -293,7 +293,7 @@ watch(() => props.show, (newVal) => {
   justify-content: space-between;
   padding: 0 24px;
 }
-.header-left {
+.header-left, .header-right {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -320,6 +320,24 @@ watch(() => props.show, (newVal) => {
 }
 .tech-badge .fw-bold { color: #0f172a; font-weight: 800; }
 
+.close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(241, 245, 249, 0.8);
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
 /* ================== 对话区域 ================== */
 .chat-body {
   flex: 1;
@@ -328,17 +346,13 @@ watch(() => props.show, (newVal) => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  /* 极简网格背景 */
   background-color: rgba(248, 250, 252, 0.4);
   background-image: radial-gradient(rgba(203, 213, 225, 0.4) 1px, transparent 1px);
   background-size: 20px 20px;
 }
-
-/* 优雅的细体滚动条 */
 .chat-body::-webkit-scrollbar { width: 6px; }
 .chat-body::-webkit-scrollbar-track { background: transparent; }
 .chat-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-.chat-body::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 .empty-state {
   margin: auto;
@@ -367,7 +381,6 @@ watch(() => props.show, (newVal) => {
 .is-user { align-self: flex-end; flex-direction: row-reverse; }
 .is-ai { align-self: flex-start; }
 
-/* 头像微调 */
 .avatar {
   width: 38px;
   height: 38px;
@@ -383,7 +396,7 @@ watch(() => props.show, (newVal) => {
 }
 .avatar-img { width: 100%; height: 100%; object-fit: contain; border-radius: 9px; }
 
-/* 气泡深度优化 */
+/* 气泡 */
 .bubble {
   padding: 14px 18px;
   font-size: 15px;
@@ -410,7 +423,6 @@ watch(() => props.show, (newVal) => {
   border: 1px solid #fecaca !important;
 }
 
-/* 光标 */
 .cursor {
   display: inline-block;
   width: 6px;
@@ -430,7 +442,6 @@ watch(() => props.show, (newVal) => {
   flex-direction: column;
 }
 
-/* 快捷回复胶囊 */
 .quick-messages {
   display: flex;
   gap: 10px;
@@ -459,7 +470,6 @@ watch(() => props.show, (newVal) => {
   transform: translateY(-1px);
 }
 
-/* 输入框区域改进 */
 .chat-footer {
   padding: 16px 24px 24px 24px;
 }
@@ -477,7 +487,6 @@ watch(() => props.show, (newVal) => {
   padding: 6px 0;
 }
 
-/* 🌟 Apple 风格的内嵌发送按钮 */
 .send-btn-icon {
   width: 28px;
   height: 28px;
@@ -499,5 +508,54 @@ watch(() => props.show, (newVal) => {
 .send-btn-icon.is-active:hover {
   background: #059669;
   transform: translateY(-1px);
+}
+
+/* ================== 📱 移动端媒体查询适配 ================== */
+@media (max-width: 768px) {
+  .chat-casing {
+    width: 100vw;
+    height: 100dvh; /* 使用 dvh 解决移动端浏览器导航栏遮挡问题 */
+    max-height: 100dvh;
+    border-radius: 0;
+    margin: 0;
+  }
+  
+  .chat-header {
+    padding: 0 16px;
+    height: 56px;
+  }
+  
+  .hide-on-mobile {
+    display: none;
+  }
+
+  .chat-body {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .message-wrapper {
+    max-width: 95%; /* 手机屏幕小，气泡可以放宽一点 */
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .bubble {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .quick-messages {
+    padding: 12px 16px 0 16px;
+  }
+
+  .chat-footer {
+    /* iOS 底部安全区防遮挡 */
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+  }
 }
 </style>
