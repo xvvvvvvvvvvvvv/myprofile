@@ -274,9 +274,16 @@ watch(() => props.show, (newVal) => {
           </div>
           
           <div class="bubble" :class="{ 'error-bubble': msg.isError }">
-            {{ msg.content }}
-            <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
-          </div>
+  <div v-if="msg.role === 'user'">{{ msg.content }}</div>
+  
+  <div 
+    v-else 
+    class="markdown-body" 
+    v-html="renderMarkdown(msg.content)"
+  ></div>
+
+  <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
+</div>
         </div>
       </div>
 
