@@ -2,23 +2,28 @@
 import { ref, watch, nextTick } from 'vue'
 import { NModal, NInput, NSelect } from 'naive-ui'
 import { marked } from 'marked'
+import { markedHighlight } from 'marked-highlight' // 引入新插件
 import hljs from 'highlight.js'
-// 引入深色科技风高亮主题
 import 'highlight.js/styles/atom-one-dark.css'
 
-// 2. 配置 marked，让 highlight.js 接管代码块的渲染
-marked.setOptions({
-  highlight: function (code, lang) {
+// 1. 使用官方推荐的 use() 语法注入高亮插件，并加上 TS 类型注解
+marked.use(markedHighlight({
+  langPrefix: 'hljs language-',
+  highlight(code: string, lang: string) { // 👈 加上了 :string，解决 TS 报错
     const language = hljs.getLanguage(lang) ? lang : 'plaintext'
     return hljs.highlight(code, { language }).value
-  },
-  breaks: true // 允许识别文本里的回车换行
+  }
+}))
+
+// 2. 单独配置开启回车换行
+marked.use({
+  breaks: true
 })
 
-// 3. 准备渲染函数：把 AI 返回的纯文本转化为带样式的 HTML
+// 3. 渲染函数（强转为 string 满足 Vue v-html 的类型要求）
 const renderMarkdown = (text: string) => {
   if (!text) return ''
-  return marked.parse(text)
+  return marked.parse(text) as string // 👈 加上 as string，让 TS 安心
 }
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', val: boolean): void }>()
