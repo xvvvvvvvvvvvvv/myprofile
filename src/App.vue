@@ -71,32 +71,33 @@ onUnmounted(() => {
     <n-global-style /> 
     <n-layout class="app-layout">
       
-      <n-layout-header bordered class="premium-nav-header">
+      <n-layout-header class="premium-nav-header neu-flat">
         <div class="header-left">
           <div class="logo">
             <span class="logo-name">Xiao Wei</span><span class="logo-dot">.</span>
           </div>
-          <div class="divider"></div>
+          <div class="divider neu-groove"></div>
           <span class="logo-tagline">Architecture & AI Agent</span>
         </div>
         
-        <div class="system-status-board">
+        <div class="system-status-board neu-inset-panel">
+          
           <div class="status-indicator">
             <span class="pulse-dot"></span>
             <span class="status-text">OpenClaw: <span class="fw-bold">Online</span></span>
           </div>
           
-          <div class="status-divider"></div>
+          <div class="status-divider neu-groove"></div>
           
-          <div class="lobster-trigger" @click="isTvOpen = true" title="唤醒虾小毛">
+          <div class="lobster-trigger neu-btn" @click="isTvOpen = true" title="唤醒虾小毛">
             <span class="lobster-icon">🦞</span>
-            
             <transition name="fade-text" mode="out-in">
               <span class="status-text speech-text" :key="currentQuote">
                 {{ currentQuote }}
               </span>
             </transition>
           </div>
+          
         </div>
       </n-layout-header>
 
@@ -111,19 +112,19 @@ onUnmounted(() => {
       <div class="floating-toolbox">
         <transition name="pop-up">
           <div v-show="isToolboxOpen" class="tools-list">
-            <div class="tool-item" @click="handleTVClick">
-              <Vue3Lottie :animationData="tvAnimation" :height="40" :width="40" />
-              <span class="tool-tooltip">Openclaw</span>
+            <div class="tool-item neu-btn-round" @click="handleTVClick">
+              <Vue3Lottie :animationData="tvAnimation" :height="36" :width="36" />
+              <span class="tool-tooltip neu-popup">Openclaw</span>
             </div>
           </div>
         </transition>
 
         <div 
-          class="main-fab" 
+          class="main-fab neu-btn-round" 
           :class="{ 'is-active': isToolboxOpen }"
           @click="isToolboxOpen = !isToolboxOpen"
         >
-          <Vue3Lottie :animationData="mainBtn" :height="50" :width="50" />
+          <Vue3Lottie :animationData="mainBtn" :height="46" :width="46" />
         </div>
       </div>
 
@@ -135,17 +136,28 @@ onUnmounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&family=Fira+Code:wght@500&display=swap');
 
-/* 🌟 饱满感的核心：点阵背景覆盖 */
+/* ================== 全局拟态变量 ================== */
+:root {
+  --nm-bg: #e0e5ec;        /* 主机面板底色（科技冷灰） */
+  --nm-light: #ffffff;     /* 高光色 */
+  --nm-dark: #a3b1c6;      /* 阴影色 */
+  
+  --text-main: #2d3748;
+  --text-muted: #718096;
+  --accent-green: #10b981;
+  --accent-green-dark: #059669;
+}
+
+/* ================== 基础布局 ================== */
 .app-layout {
   min-height: 100vh;
-  background-color: #f8fafc;
-  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-color: var(--nm-bg);
   font-family: 'Nunito', -apple-system, sans-serif;
   position: relative; 
 }
+.main-content { background: transparent !important; }
 
-/* ================== 头部全新样式 ================== */
+/* ================== 1. 头部导航栏 (底板) ================== */
 .premium-nav-header {
   padding: 0 5%; 
   height: 70px; 
@@ -155,45 +167,38 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  background-color: var(--nm-bg) !important;
+  /* 头部底部增加一条微凸起的光影，区别于下方内容区 */
+  box-shadow: 0 6px 10px -6px var(--nm-dark);
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
+.header-left { display: flex; align-items: center; gap: 16px; }
 .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
-.logo-name { background: linear-gradient(to right, #0f172a, #334155); -webkit-background-clip: text; color: transparent; }
-.logo-dot { color: #10b981; }
-
-.divider {
-  width: 2px;
-  height: 18px;
-  background-color: #e2e8f0;
-  border-radius: 2px;
-}
+.logo-name { color: var(--text-main); text-shadow: 1px 1px 1px var(--nm-light); }
+.logo-dot { color: var(--accent-green); }
 
 .logo-tagline {
   font-family: 'Fira Code', monospace; 
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   letter-spacing: 0.5px;
 }
 
-/* 🌟 右侧系统状态区 */
+/* ================== 2. 遥控器核心仪表盘 ================== */
 .system-status-board {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f1f5f9;
-  padding: 6px 16px;
-  border-radius: 30px;
-  border: 1px solid #e2e8f0;
+  padding: 6px 6px 6px 16px;
+  border-radius: 40px;
+}
+
+/* 内凹的仪表盘凹槽 */
+.neu-inset-panel {
+  background: var(--nm-bg);
+  box-shadow: 
+    inset 6px 6px 12px var(--nm-dark),
+    inset -6px -6px 12px var(--nm-light);
 }
 
 .status-indicator {
@@ -202,88 +207,84 @@ onUnmounted(() => {
   gap: 8px;
 }
 
+/* 拟态 LED 指示灯：嵌在孔里的发光二极管 */
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--accent-green);
+  border-radius: 50%;
+  /* 内阴影塑造玻璃灯泡感，外阴影塑造底座孔洞感 */
+  box-shadow: 
+    inset 2px 2px 4px rgba(255,255,255,0.6),
+    inset -2px -2px 4px rgba(0,0,0,0.2),
+    0 0 8px rgba(16, 185, 129, 0.6);
+  animation: pulse-neu 2.5s infinite;
+}
+
+@keyframes pulse-neu {
+  0% { box-shadow: inset 2px 2px 4px rgba(255,255,255,0.6), inset -2px -2px 4px rgba(0,0,0,0.2), 0 0 2px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: inset 2px 2px 4px rgba(255,255,255,0.8), inset -2px -2px 4px rgba(0,0,0,0.2), 0 0 12px rgba(16, 185, 129, 0.8); }
+  100% { box-shadow: inset 2px 2px 4px rgba(255,255,255,0.6), inset -2px -2px 4px rgba(0,0,0,0.2), 0 0 2px rgba(16, 185, 129, 0.4); }
+}
+
 .status-text {
   font-family: 'Fira Code', monospace;
-  font-size: 12px;
-  color: #475569;
+  font-size: 13px;
+  color: var(--text-muted);
   white-space: nowrap; 
 }
-.status-text .fw-bold {
-  color: #0f172a;
-  font-weight: 700;
-}
+.status-text .fw-bold { color: var(--text-main); font-weight: 700; }
 
-/* 🦞 说话时的专属文字样式 */
-.speech-text {
-  color: #059669; 
-  font-weight: 600;
-  font-style: italic; 
-}
-
-/* 🌟 文字替换的平滑动画 */
-.fade-text-enter-active, .fade-text-leave-active {
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.fade-text-enter-from { opacity: 0; transform: translateY(4px); }
-.fade-text-leave-to { opacity: 0; transform: translateY(-4px); }
-
-/* 分割线 */
-.status-divider {
-  width: 1px;
-  height: 14px;
-  background-color: #cbd5e1;
-  margin: 0 4px;
-}
-
-/* 小龙虾召唤按钮交互 */
+/* 小龙虾呼唤物理按键 */
 .lobster-trigger {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 30px;
+}
+
+/* 凸起的物理胶囊按钮 */
+.neu-btn {
+  background: var(--nm-bg);
+  box-shadow: 
+    4px 4px 8px var(--nm-dark),
+    -4px -4px 8px var(--nm-light);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease-in-out;
 }
 
-.lobster-trigger:hover {
-  background-color: rgba(16, 185, 129, 0.1); 
-  transform: translateY(-1px);
+/* 按下遥控器按钮的物理反馈 */
+.neu-btn:hover, .neu-btn:active {
+  box-shadow: 
+    inset 3px 3px 6px var(--nm-dark),
+    inset -3px -3px 6px var(--nm-light);
+  color: var(--accent-green-dark);
 }
 
-.lobster-icon {
-  font-size: 16px;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+.lobster-icon { font-size: 16px; transition: transform 0.3s ease; }
+.neu-btn:hover .lobster-icon { transform: scale(1.15) rotate(-10deg); }
+
+.speech-text {
+  color: var(--accent-green-dark); 
+  font-weight: 700;
+  font-style: italic; 
 }
 
-.lobster-trigger:hover .lobster-icon {
-  transform: scale(1.3) rotate(-15deg);
+/* 拟态刻线（用于分割线） */
+.neu-groove {
+  width: 2px;
+  height: 18px;
+  background: transparent;
+  box-shadow: 
+    inset 1px 1px 2px var(--nm-dark),
+    inset -1px -1px 2px var(--nm-light);
+  border-radius: 2px;
 }
+.status-divider { margin: 0 4px; height: 16px; }
 
-/* 呼吸灯动画 */
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-  animation: pulse-green 2s infinite;
-}
 
-@keyframes pulse-green {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-.main-content { background: transparent !important; }
-
-/* 页面切换动画 */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-.fade-enter-from { opacity: 0; transform: translateY(15px); }
-.fade-leave-to { opacity: 0; transform: translateY(-15px); }
-
-/* ================== 悬浮工具箱样式 ================== */
+/* ================== 3. 悬浮工具箱 ================== */
 .floating-toolbox {
   position: fixed;
   right: 40px;
@@ -294,157 +295,109 @@ onUnmounted(() => {
   z-index: 999;
 }
 
-.tools-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
-}
+.tools-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 25px; }
 
-.tool-item {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 24px rgba(31, 38, 135, 0.05);
+/* 圆形/方圆形通用悬浮物理按钮 */
+.neu-btn-round {
+  background: var(--nm-bg);
+  box-shadow: 
+    6px 6px 12px var(--nm-dark),
+    -6px -6px 12px var(--nm-light);
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.tool-item:hover {
-  transform: scale(1.1) translateY(-2px);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 32px rgba(37, 99, 235, 0.12);
+.neu-btn-round:active {
+  box-shadow: 
+    inset 4px 4px 8px var(--nm-dark),
+    inset -4px -4px 8px var(--nm-light);
 }
 
-.tool-tooltip {
-  position: absolute;
-  right: 70px;
-  background: #1e293b;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s ease;
-  transform: translateX(10px) scale(0.95);
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-.tool-item:hover .tool-tooltip {
-  opacity: 1;
-  transform: translateX(0) scale(1);
+.tool-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
 }
 
+/* 主控悬浮按钮 */
 .main-fab {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
 }
-.main-fab:hover {
-  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.25);
-  transform: scale(1.05);
-}
+
 .main-fab.is-active {
-  transform: scale(0.95) rotate(15deg);
-  box-shadow: 0 5px 15px rgba(37, 99, 235, 0.1);
+  /* 开启时深深陷进去 */
+  box-shadow: 
+    inset 6px 6px 12px var(--nm-dark),
+    inset -6px -6px 12px var(--nm-light);
+  transform: scale(0.95);
 }
 
-.pop-up-enter-active, .pop-up-leave-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform-origin: bottom center;
-}
-.pop-up-enter-from, .pop-up-leave-to {
+/* 拟态提示框 */
+.neu-popup {
+  position: absolute;
+  right: 70px;
+  background: var(--nm-bg);
+  color: var(--text-main);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
   opacity: 0;
-  transform: translateY(30px) scale(0.8);
+  pointer-events: none;
+  transition: all 0.3s ease;
+  transform: translateX(10px);
+  white-space: nowrap;
+  box-shadow: 
+    4px 4px 10px var(--nm-dark),
+    -4px -4px 10px var(--nm-light);
 }
 
-/* ================== 📱 移动端响应式适配 ================== */
+.tool-item:hover .neu-popup {
+  opacity: 1;
+  transform: translateX(0);
+}
 
-/* 平板 & 常规手机 (最大宽度 768px) */
+
+/* ================== 动画 ================== */
+.fade-text-enter-active, .fade-text-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
+.fade-text-enter-from { opacity: 0; transform: translateY(4px); }
+.fade-text-leave-to { opacity: 0; transform: translateY(-4px); }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.fade-enter-from { opacity: 0; transform: translateY(15px); }
+.fade-leave-to { opacity: 0; transform: translateY(-15px); }
+
+.pop-up-enter-active, .pop-up-leave-active { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); transform-origin: bottom center; }
+.pop-up-enter-from, .pop-up-leave-to { opacity: 0; transform: translateY(30px) scale(0.8); }
+
+
+/* ================== 4. 移动端适配 ================== */
 @media screen and (max-width: 768px) {
-  /* 1. 头部缩减间距，稍微降低高度 */
-  .premium-nav-header {
-    padding: 0 16px;
-    height: 60px;
-  }
-
-  /* 2. 隐藏次要文本（副标题、分隔线） */
-  .logo-tagline, 
-  .header-left .divider {
-    display: none;
-  }
-
-  /* 3. 状态栏精简（隐藏 OpenClaw: Online） */
-  .system-status-board {
-    padding: 4px 10px;
-    gap: 8px;
-  }
-  .status-text:not(.speech-text),
-  .status-divider {
-    display: none; 
-  }
-
-  /* 4. 限制语录宽度，超出显示省略号，防止撑爆屏幕 */
-  .speech-text {
-    max-width: 130px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 11px;
-  }
-
-  /* 5. 悬浮工具箱贴近边缘，优化触控区域 */
-  .floating-toolbox {
-    right: 20px;
-    bottom: 20px; /* 移动端标准边距 */
-    /* 处理 iOS 底部安全区 */
-    bottom: env(safe-area-inset-bottom, 20px); 
-  }
-
-  /* 6. 移动端没有鼠标，直接隐藏 Hover 提示框 */
-  .tool-tooltip {
-    display: none !important;
-  }
-
-  /* 7. 稍微缩小工具按钮 */
-  .main-fab {
-    width: 56px;
-    height: 56px;
-  }
-  .tool-item {
-    width: 48px;
-    height: 48px;
-  }
+  .premium-nav-header { padding: 0 16px; height: 60px; }
+  .logo-tagline, .header-left .divider { display: none; }
+  
+  .system-status-board { padding: 4px 6px 4px 12px; gap: 8px; }
+  .status-text:not(.speech-text), .status-divider { display: none; }
+  
+  .lobster-trigger { padding: 6px 12px; }
+  .speech-text { max-width: 120px; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+  
+  .floating-toolbox { right: 20px; bottom: max(20px, env(safe-area-inset-bottom)); }
+  .neu-popup { display: none !important; }
+  
+  .main-fab { width: 56px; height: 56px; }
+  .tool-item { width: 46px; height: 46px; }
 }
 
-/* 极小屏幕手机 (如 iPhone SE, 最大宽度 400px) */
 @media screen and (max-width: 400px) {
-  /* 屏幕太小了，把虾小毛的话也藏起来，只留表情包和呼吸灯 */
-  .speech-text {
-    display: none;
-  }
-  .lobster-icon {
-    font-size: 18px; /* 稍微放大一点表情，方便点击 */
-  }
-  .logo {
-    font-size: 1.25rem; /* Logo 稍微缩小 */
-  }
+  .speech-text { display: none; }
+  .system-status-board { padding: 6px; }
+  .lobster-trigger { padding: 8px; border-radius: 50%; }
 }
 </style>
