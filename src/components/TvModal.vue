@@ -246,21 +246,19 @@ watch(() => props.show, (newVal) => {
         </div>
         <div class="header-right">
           <div class="tech-badge hide-on-mobile">
-            <span class="fw-bold">OpenClaw</span> Engine
+            <span class="fw-bold">OpenClaw</span> 驱动
           </div>
-          <div class="close-btn" @click="emit('update:show', false)">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 6L6 18M6 6l12 12"></path></svg>
-          </div>
+          <div class="close-btn" @click="emit('update:show', false)">✕</div>
         </div>
       </div>
 
       <div class="chat-body" ref="chatContainerRef">
         <div v-if="messageList.length === 0" class="empty-state">
-          <div class="empty-icon">
-            {{ currentAgentId === 'guest-bot' ? '🦞' : '⌘' }}
+          <div class="empty-lobster">
+            {{ currentAgentId === 'guest-bot' ? '🦞' : '🤖' }}
           </div>
           <div class="empty-text">
-            {{ currentAgentId === 'guest-bot' ? 'System Ready. How can I help you today?' : 'Expert initialized. Awaiting input.' }}
+            {{ currentAgentId === 'guest-bot' ? '“找本龙虾有何贵干？”' : '“专家已就位，请描述您的问题。”' }}
           </div>
         </div>
 
@@ -271,12 +269,12 @@ watch(() => props.show, (newVal) => {
           :class="msg.role === 'user' ? 'is-user' : 'is-ai'"
         >
           <div class="avatar" :class="msg.role === 'user' ? 'avatar-user' : 'avatar-ai'">
-            <img v-if="msg.role === 'user'" src="/user.png" class="avatar-img" alt="User" />
+            <img v-if="msg.role === 'user'" src="/user.png" class="avatar-img" alt="我" />
             <img v-else src="/lobster.png" class="avatar-img" alt="AI" />
           </div>
           
           <div class="bubble" :class="{ 'error-bubble': msg.isError }">
-            <div v-if="msg.role === 'user'" class="user-text">{{ msg.content }}</div>
+            <div v-if="msg.role === 'user'">{{ msg.content }}</div>
             
             <div 
               v-else 
@@ -297,30 +295,31 @@ watch(() => props.show, (newVal) => {
             class="quick-tag"
             @click="sendQuickMessage(msg)"
           >
-            {{ msg.replace(/[#*`_~]/g, '') }}
+            <div class="markdown-body" v-html="renderMarkdown(msg)"></div>
           </span>
         </div>
 
         <div class="chat-footer">
-          <div class="input-container">
-            <n-input 
-              ref="inputRef"
-              v-model:value="searchQuery" 
-              type="textarea" 
-              placeholder="Ask anything or type a command..." 
-              class="chat-input"
-              @keydown.enter="handleEnter"
-              :disabled="isSearching"
-              :autosize="{ minRows: 1, maxRows: 4 }"
-            />
-            <div 
-              class="send-btn-icon" 
-              :class="{ 'is-active': searchQuery.trim().length > 0 && !isSearching }"
-              @click="handleCallOpenClaw"
-            >
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
-            </div>
-          </div>
+          <n-input 
+            ref="inputRef"
+            v-model:value="searchQuery" 
+            type="textarea" 
+            placeholder="输入指令..." 
+            class="chat-input"
+            @keydown.enter="handleEnter"
+            :disabled="isSearching"
+            :autosize="{ minRows: 1, maxRows: 4 }"
+          >
+            <template #suffix>
+              <div 
+                class="send-btn-icon" 
+                :class="{ 'is-active': searchQuery.trim().length > 0 && !isSearching }"
+                @click="handleCallOpenClaw"
+              >
+                ↑
+              </div>
+            </template>
+          </n-input>
         </div>
       </div>
       
@@ -329,21 +328,21 @@ watch(() => props.show, (newVal) => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap');
 
-/* ================== 全局重构为极致现代极简风 (SaaS Style) ================== */
+/* ================== 外壳：纯白专业风 ================== */
 .chat-casing {
   width: calc(100vw - 32px);
-  max-width: 860px; /* 稍微加宽一点，更适合阅读代码 */
+  max-width: 820px;
   height: 85vh; 
-  max-height: 900px;
-  background: #ffffff; /* 纯白背景，摒弃毛玻璃，极致专业 */
+  max-height: 850px;
+  background: #ffffff; /* 移除毛玻璃，使用纯白 */
   border-radius: 16px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.2); /* 苹果原生质感阴影 */
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.2);
   overflow: hidden;
-  font-family: 'Inter', -apple-system, sans-serif; /* 换用更硬朗专业的 Inter 字体 */
+  font-family: 'Nunito', -apple-system, sans-serif;
 }
 
 /* ================== 头部 ================== */
@@ -359,7 +358,6 @@ watch(() => props.show, (newVal) => {
 }
 .header-left, .header-right { display: flex; align-items: center; gap: 12px; }
 
-/* 更小更精致的呼吸灯 */
 .status-dot {
   width: 8px;
   height: 8px;
@@ -370,14 +368,14 @@ watch(() => props.show, (newVal) => {
 
 .tech-badge {
   font-family: 'Fira Code', monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: #64748b;
   padding: 4px 10px;
   border-radius: 6px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
 }
-.tech-badge .fw-bold { color: #334155; font-weight: 600; }
+.tech-badge .fw-bold { color: #334155; font-weight: 700; }
 
 .close-btn {
   width: 28px;
@@ -388,11 +386,12 @@ watch(() => props.show, (newVal) => {
   border-radius: 6px;
   color: #94a3b8;
   cursor: pointer;
+  font-size: 14px;
   transition: all 0.2s;
 }
 .close-btn:hover { background: #f1f5f9; color: #0f172a; }
 
-/* 下拉框专业化改造 */
+/* 下拉选择器 */
 .agent-selector { width: 190px; }
 :deep(.n-base-selection) {
   border-radius: 6px;
@@ -400,9 +399,11 @@ watch(() => props.show, (newVal) => {
   border: 1px solid transparent !important;
   box-shadow: none !important;
 }
-:deep(.n-base-selection:hover) { background-color: #f8fafc !important; border-color: #e2e8f0 !important; }
-:deep(.n-base-selection .n-base-selection-label) { font-weight: 600; color: #1e293b; font-size: 14px; }
-
+:deep(.n-base-selection:hover), :deep(.n-base-selection--active) { 
+  background-color: #f8fafc !important; 
+  border-color: #e2e8f0 !important; 
+}
+:deep(.n-base-selection .n-base-selection-label) { font-weight: 700; color: #1e293b; }
 
 /* ================== 对话区域 ================== */
 .chat-body {
@@ -411,24 +412,30 @@ watch(() => props.show, (newVal) => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 32px; /* 增加消息间距，呼吸感更强 */
+  gap: 28px; /* 增加消息间距，显得更专业不拥挤 */
   background-color: #ffffff;
 }
 .chat-body::-webkit-scrollbar { width: 6px; }
 .chat-body::-webkit-scrollbar-track { background: transparent; }
-.chat-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
+.chat-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
 .empty-state {
   margin: auto;
   text-align: center;
   transform: translateY(-20px);
 }
-.empty-icon {
-  font-size: 40px;
-  margin-bottom: 16px;
-  filter: grayscale(0.2); /* 降低一点饱和度，显得高级 */
+.empty-lobster {
+  font-size: 50px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  animation: float 3s ease-in-out infinite;
 }
-.empty-text { color: #94a3b8; font-size: 14px; font-weight: 500; font-family: 'Fira Code', monospace; }
+.empty-text { color: #64748b; font-size: 15px; font-weight: 600; }
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
 
 /* 消息包裹层 */
 .message-wrapper {
@@ -439,11 +446,10 @@ watch(() => props.show, (newVal) => {
 .is-user { align-self: flex-end; flex-direction: row-reverse; }
 .is-ai { align-self: flex-start; }
 
-/* 头像扁平化 */
 .avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px; /* 极客风小方角 */
+  width: 32px;
+  height: 32px;
+  border-radius: 8px; /* 克制的小圆角 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -452,32 +458,27 @@ watch(() => props.show, (newVal) => {
   border: 1px solid #e2e8f0;
   overflow: hidden;
 }
-.avatar-user { border-color: #cbd5e1; }
-.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-img { width: 100%; height: 100%; object-fit: contain; }
 
-/* 气泡扁平化、去饱和度 */
+/* 气泡风格优化：扁平、高级灰与深色 */
 .bubble {
   padding: 12px 16px;
   font-size: 15px;
   line-height: 1.6;
-  border-radius: 8px; /* 克制的圆角 */
-  box-shadow: none; /* 移除浮夸的阴影 */
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-radius: 8px; /* 统一小圆角 */
 }
 .is-user .bubble {
-  background: #0f172a; /* 深邃的 Slate 色，极具开发者极客感，替代原本的亮绿色 */
+  background: #0f172a; /* 高级极客黑 */
   color: #f8fafc;
   border-bottom-right-radius: 2px;
 }
-.user-text {
-  white-space: pre-wrap;
-  word-break: break-all;
-}
 .is-ai .bubble {
-  background: #f8fafc; /* 极浅的灰底，划分层级 */
+  background: #f8fafc; /* 清爽浅灰 */
   color: #334155;
   border: 1px solid #f1f5f9;
   border-bottom-left-radius: 2px;
-  width: 100%;
 }
 .error-bubble {
   color: #b91c1c !important;
@@ -496,8 +497,7 @@ watch(() => props.show, (newVal) => {
 }
 @keyframes blink { 50% { opacity: 0; } }
 
-
-/* ================== 高级底部输入区 ================== */
+/* ================== 底部输入区 ================== */
 .chat-footer-wrapper {
   background: #ffffff;
   border-top: 1px solid #f1f5f9;
@@ -516,56 +516,42 @@ watch(() => props.show, (newVal) => {
 .quick-tag {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  color: #64748b;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  color: #475569;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
 }
-.quick-tag:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #0f172a;
-}
+.quick-tag:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+.quick-tag .markdown-body p { margin: 0; font-size: 13px; }
 
 .chat-footer {
   padding: 16px 24px 24px 24px;
 }
 
-/* 仿 ChatGPT / Cursor 风格的一体化输入框 */
-.input-container {
-  position: relative;
+/* 输入框定制：解决之前的奇怪外观 */
+:deep(.chat-input.n-input) {
   border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: flex-end;
-  padding: 4px;
+  background-color: #f8fafc;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  align-items: flex-end; /* 让发送按钮沉在底部 */
 }
-.input-container:focus-within {
-  background: #ffffff;
+:deep(.chat-input.n-input:hover), :deep(.chat-input.n-input:focus-within) {
+  background-color: #ffffff;
   border-color: #cbd5e1;
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
-
-:deep(.n-input) {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  flex: 1;
-}
-:deep(.n-input .n-input__textarea-el) {
-  font-family: 'Inter', sans-serif;
+:deep(.chat-input.n-input .n-input__textarea-el) {
   font-size: 15px;
-  padding: 10px 12px;
+  padding: 12px 0 12px 14px; /* 舒适的内边距 */
   color: #1e293b;
 }
 
-/* 专业发送按钮 */
+/* 按钮放在 #suffix 里 */
 .send-btn-icon {
   width: 32px;
   height: 32px;
@@ -575,32 +561,29 @@ watch(() => props.show, (newVal) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
   cursor: not-allowed;
   transition: all 0.2s ease;
-  margin: 4px;
-  flex-shrink: 0;
+  margin-bottom: 6px; /* 贴合底部 */
+  margin-right: 6px;
 }
 .send-btn-icon.is-active {
-  background: #0f172a; /* 与用户气泡呼应的高级黑 */
+  background: #0f172a; /* 与用户气泡呼应 */
   color: #ffffff;
   cursor: pointer;
 }
-.send-btn-icon.is-active:hover {
-  background: #334155;
-}
+.send-btn-icon.is-active:hover { background: #334155; }
 
-
-/* ================== 🚀 Markdown 与代码块 (保持优秀的原子黑客风) ================== */
+/* ================== 🚀 Markdown 与代码块 (极客终端风) ================== */
 :deep(.markdown-body) {
   font-size: 15px;
   line-height: 1.7;
   color: #1e293b;
 }
-:deep(.markdown-body p) { margin-top: 0; margin-bottom: 14px; }
+:deep(.markdown-body p) { margin-top: 0; margin-bottom: 12px; }
 :deep(.markdown-body p:last-child) { margin-bottom: 0; }
-:deep(.markdown-body strong) { font-weight: 600; color: #0f172a; }
+:deep(.markdown-body strong) { font-weight: 700; color: #0f172a; }
 
-/* 行内小代码块扁平化 */
 :deep(.markdown-body code:not(pre code)) {
   background-color: #e2e8f0;
   color: #334155;
@@ -617,7 +600,6 @@ watch(() => props.show, (newVal) => {
   margin: 16px 0;
   overflow-x: auto;
   position: relative;
-  /* 移除阴影，完全扁平 */
   border: 1px solid #334155;
 }
 
@@ -639,7 +621,9 @@ watch(() => props.show, (newVal) => {
   line-height: 1.6;
   color: #abb2bf;
 }
-
+:deep(.markdown-body pre::-webkit-scrollbar) { height: 8px; }
+:deep(.markdown-body pre::-webkit-scrollbar-thumb) { background-color: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+:deep(.markdown-body pre::-webkit-scrollbar-track) { background: transparent; }
 
 /* ================== 📱 移动端适配 ================== */
 @media (max-width: 768px) {
