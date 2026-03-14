@@ -73,14 +73,13 @@ onMounted(() => {
 
 <template>
   <div class="login-container">
-    <div class="bg-circle circle-1"></div>
-    <div class="bg-circle circle-2"></div>
-
-    <div class="login-card portfolio-card">
+    <div class="portfolio-card neumorphic-panel">
       
       <div class="sidebar-box">
         <div class="profile-header">
-          <img src="/xv.jpg" class="avatar" alt="avatar" />
+          <div class="avatar-well">
+            <img src="/xv.jpg" class="avatar" alt="avatar" />
+          </div>
           <h1 class="logo-title">肖 伟</h1>
           <p class="subtitle">Python 核心架构 / 全栈开发</p>
         </div>
@@ -92,7 +91,7 @@ onMounted(() => {
         <div class="image-text">
           <p class="motto">" Not all those who wander are lost "</p>
           
-          <div class="contact-card">
+          <div class="contact-card neu-btn">
             <div class="contact-item">
               <span class="contact-icon">📧</span>
               <a href="mailto:xv1172091477@gmail.com" class="contact-text">xv1172091477@gmail.com</a>
@@ -114,10 +113,12 @@ onMounted(() => {
                   <Vue3Lottie :animationData="iconAbout" :height="48" :width="48" class="section-icon" />
                   <h2 class="section-title">About Me</h2>
                 </div>
-                <p class="bio-text">
-                  拥有 7 年实战经验的后端开发者。专注于构建高并发任务调度中台、异构数据聚合系统与自动化运维架构。
-                  不仅精通 Django/Flask 企业级开发，更热衷于 <strong class="highlight-text">边缘 AI Agent</strong>、<strong class="highlight-text">Web3 量化交易</strong> 及 <strong>OpenClaw</strong> 等前沿技术的落地实践
-                </p>
+                <div class="neu-text-well">
+                  <p class="bio-text">
+                    拥有 7 年实战经验的后端开发者。专注于构建高并发任务调度中台、异构数据聚合系统与自动化运维架构。
+                    不仅精通 Django/Flask 企业级开发，更热衷于 <strong class="highlight-text">边缘 AI Agent</strong>、<strong class="highlight-text">Web3 量化交易</strong> 及 <strong>OpenClaw</strong> 等前沿技术的落地实践
+                  </p>
+                </div>
               </div>
 
               <div class="section-block" v-if="skills.length > 0">
@@ -125,20 +126,17 @@ onMounted(() => {
                   <Vue3Lottie :animationData="iconTech" :height="48" :width="48" class="section-icon" />
                   <h2 class="section-title">Tech Stack</h2>
                 </div>
-                <n-space wrap :size="[12, 12]">
+                <n-space wrap :size="[16, 16]">
                   <n-tag 
                     v-for="skill in skills" 
                     :key="skill.id"
-                    :type="getTagType(skill.bg_color)"
-                    :color="isHexColor(skill.bg_color) ? { color: skill.bg_color, textColor: skill.text_color } : undefined"
                     :bordered="false" 
                     size="large" 
-                    class="tech-tag"
-                    :style="isHexColor(skill.bg_color) ? { fontWeight: 'bold' } : {}"
+                    class="tech-tag neu-btn"
                   >
-                    <div class="tag-content">
+                    <div class="tag-content" :style="isHexColor(skill.bg_color) ? { color: skill.bg_color } : {}">
                       <img :src="skill.icon_url" class="tech-icon" :alt="skill.name" />
-                      <span>{{ skill.name }}</span>
+                      <span style="font-weight: 800;">{{ skill.name }}</span>
                     </div>
                   </n-tag>
                 </n-space>
@@ -149,7 +147,7 @@ onMounted(() => {
                   <Vue3Lottie :animationData="iconExp" :height="48" :width="48" class="section-icon" />
                   <h2 class="section-title">Experience</h2>
                 </div>
-                <n-timeline size="large" style="margin-top: 25px;">
+                <n-timeline size="large" style="margin-top: 25px; padding-left: 10px;">
                   <n-timeline-item 
                     v-for="exp in experiences" 
                     :key="exp.id"
@@ -167,9 +165,9 @@ onMounted(() => {
                   <Vue3Lottie :animationData="iconProject" :height="48" :width="48" class="section-icon" />
                   <h2 class="section-title">Projects</h2>
                 </div>
-                <n-grid x-gap="20" y-gap="20" cols="1 m:2" responsive="screen">
+                <n-grid x-gap="24" y-gap="24" cols="1 m:2" responsive="screen">
                   <n-gi v-for="proj in enterpriseProjects" :key="proj.id">
-                    <n-card :title="proj.title" size="small" hoverable class="clean-card">
+                    <n-card :title="proj.title" size="small" class="neu-card">
                       <div class="project-desc" v-html="renderMarkdown(proj.description)"></div>
                     </n-card>
                   </n-gi>
@@ -181,9 +179,9 @@ onMounted(() => {
                   <Vue3Lottie :animationData="iconExplore" :height="48" :width="48" class="section-icon" />
                   <h2 class="section-title">Explorations</h2>
                 </div>
-                <n-grid x-gap="20" y-gap="20" cols="1 m:2" responsive="screen">
+                <n-grid x-gap="24" y-gap="24" cols="1 m:2" responsive="screen">
                   <n-gi v-for="proj in explorationProjects" :key="proj.id">
-                    <n-card :title="proj.title" size="small" hoverable class="clean-card border-tech">
+                    <n-card :title="proj.title" size="small" class="neu-card">
                        <div class="project-desc" v-html="renderMarkdown(proj.description)"></div>
                     </n-card>
                   </n-gi>
@@ -205,9 +203,23 @@ onMounted(() => {
 /* 引入谷歌现代字体 */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fira+Code:wght@500&display=swap');
 
-/* ================== 1. 容器与背景 (PC端基准) ================== */
+/* 🌟 核心：定义拟态设计的全局变量 🌟 */
+:root {
+  --nm-bg: #e0e5ec;        /* 主机面板底色（科技冷灰） */
+  --nm-light: #ffffff;     /* 高光色 */
+  --nm-dark: #a3b1c6;      /* 阴影色 */
+  --text-main: #2d3748;
+  --text-muted: #718096;
+  --accent-blue: #3b82f6;
+}
+
+/* 覆盖 Naive UI 的全局变量以适应拟态主题 */
+:deep(.n-tag) { background-color: transparent !important; }
+:deep(.n-card) { background-color: transparent !important; border: none !important; }
+:deep(.n-card-header__main) { color: var(--text-main) !important; font-weight: 700 !important; }
+
+/* ================== 1. 容器与背景 ================== */
 .login-container {
-  position: relative;
   width: 100%;
   height: calc(100vh - 70px); 
   padding: 30px 40px; 
@@ -217,248 +229,249 @@ onMounted(() => {
   align-items: center;
   font-family: 'Nunito', -apple-system, sans-serif;
   overflow: hidden; 
+  background-color: var(--nm-bg); /* 统一底色 */
 }
 
-.bg-circle {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  z-index: 0;
-  opacity: 0.4;
-}
-.circle-1 { width: 550px; height: 550px; background: #a1c4fd; top: -50px; left: -50px; }
-.circle-2 { width: 450px; height: 450px; background: #c2e9fb; bottom: -50px; right: -50px; }
-
-/* ================== 2. 核心大卡片 ================== */
-.login-card.portfolio-card {
+/* ================== 2. 核心大卡片 (主机外壳) ================== */
+.portfolio-card {
   display: flex;
   flex-direction: row;
   width: 100%;  
   height: 100%; 
   max-width: 1800px; 
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  background-color: var(--nm-bg);
+  border-radius: 30px;
+  /* 巨型凸起阴影，奠定主机质感 */
+  box-shadow: 
+    20px 20px 60px var(--nm-dark),
+    -20px -20px 60px var(--nm-light);
   overflow: hidden;
   z-index: 1;
 }
 
-/* ================== 3. 左侧侧边栏 ================== */
+/* ================== 3. 左侧控制面板 ================== */
 .sidebar-box {
-  width: 340px;
+  width: 360px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   padding: 50px 30px;
-  background: transparent;
-  border-right: 1px solid rgba(226, 232, 240, 0.8);
+  background: var(--nm-bg);
+  /* 用阴影替代边框进行软分割 */
+  box-shadow: 6px 0 15px -10px var(--nm-dark);
+  z-index: 2;
 }
 
 .profile-header { text-align: center; }
-.avatar {
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  background: #fff;
-  border: 3px solid #fff;
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
-  margin-bottom: 18px;
-}
-.logo-title {
-  font-size: 30px;
-  font-weight: 800;
-  background: linear-gradient(to right, #1e293b, #3b82f6);
-  -webkit-background-clip: text;
-  color: transparent;
-  margin: 0 0 6px 0;
-  letter-spacing: -0.5px;
-}
-.subtitle { font-size: 14px; color: #64748b; font-weight: 600; margin: 0;}
 
-.lottie-wrapper {
-  width: 100%;
+/* 头像凹槽设计 */
+.avatar-well {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 24px auto;
   display: flex;
   justify-content: center;
+  align-items: center;
+  background: var(--nm-bg);
+  /* 内凹阴影 */
+  box-shadow: 
+    inset 6px 6px 12px var(--nm-dark),
+    inset -6px -6px 12px var(--nm-light);
 }
 
-.image-text { 
-  text-align: center; 
-  width: 100%;
+.avatar {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* 头像本身再次凸起 */
+  box-shadow: 
+    4px 4px 8px var(--nm-dark),
+    -4px -4px 8px var(--nm-light);
 }
+
+.logo-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 8px 0;
+  letter-spacing: 1px;
+}
+.subtitle { font-size: 14px; color: var(--text-muted); font-weight: 700; margin: 0;}
+
+.lottie-wrapper { width: 100%; display: flex; justify-content: center; }
+
+.image-text { text-align: center; width: 100%; }
 .motto { 
   font-size: 13.5px; 
-  color: #94a3b8; 
+  color: var(--text-muted); 
   letter-spacing: 0.5px; 
   margin-bottom: 24px;
   font-style: italic;
   font-weight: 600;
 }
 
-/* 🌟 全新联系方式卡片样式 */
-.contact-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: rgba(241, 245, 249, 0.6);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 14px;
-  padding: 12px 16px;
-  transition: all 0.3s ease;
-}
-.contact-card:hover {
-  background: rgba(241, 245, 249, 0.9);
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.contact-icon {
-  font-size: 16px;
-}
-.contact-text {
-  font-family: 'Fira Code', 'Nunito', monospace;
-  font-size: 14px;
-  color: #475569;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-.contact-text:hover {
-  color: #2563eb;
+/* ================== 拟态交互组件 (按钮/标签通用) ================== */
+.neu-btn {
+  background-color: var(--nm-bg);
+  border-radius: 16px;
+  /* 默认凸起状态 */
+  box-shadow: 
+    6px 6px 12px var(--nm-dark),
+    -6px -6px 12px var(--nm-light);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 
-/* ================== 4. 右侧可滚动内容区 ================== */
+/* 悬停/点击时的物理凹陷反馈 */
+.neu-btn:hover, .neu-btn:active {
+  box-shadow: 
+    inset 4px 4px 8px var(--nm-dark),
+    inset -4px -4px 8px var(--nm-light);
+}
+
+.contact-card {
+  padding: 14px 20px;
+  display: inline-flex;
+}
+.contact-item { display: flex; align-items: center; gap: 12px; }
+.contact-icon { font-size: 18px; }
+.contact-text {
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  color: var(--text-main);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* ================== 4. 右侧内嵌屏幕区 ================== */
 .content-box {
   flex: 1;
   height: 100%;
-  background: transparent;
+  background: var(--nm-bg);
+  /* 整个右侧内容区向内凹陷，像是一块被保护的显示屏幕 */
+  box-shadow: 
+    inset 12px 12px 24px var(--nm-dark),
+    inset -12px -12px 24px var(--nm-light);
+  border-radius: 40px 0 0 40px; /* 内部圆角让边缘更平滑 */
+  margin: 15px 15px 15px 0;
   overflow: hidden;
 }
 
 .scroll-container {
   height: 100%;
-  padding: 40px 60px; 
+  padding: 50px 70px; 
   overflow-y: auto;
   box-sizing: border-box;
 }
 .scroll-container::-webkit-scrollbar { width: 0px; }
 
-/* ================== 右侧排版与动画标题样式 ================== */
-.section-block { margin-bottom: 55px; } 
+/* ================== 内部排版与排版凹槽 ================== */
+.section-block { margin-bottom: 65px; } 
 
 .section-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  position: relative;
-  padding-bottom: 8px;
+  margin-bottom: 24px;
 }
 
-.section-header::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 28px;
-  height: 4px;
-  background: #3b82f6;
-  border-radius: 2px;
-}
-
-.section-icon {
-  margin-right: 12px;
-  margin-left: -8px; 
-}
+.section-icon { margin-right: 12px; margin-left: -8px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.1)); }
 
 .section-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--text-main);
   margin: 0;
+  /* 文字也可以有微拟态的凸印感 */
+  text-shadow: 1px 1px 1px var(--nm-light), -1px -1px 1px rgba(163, 177, 198, 0.3);
+}
+
+/* 文本阅读区凹槽 */
+.neu-text-well {
+  background: var(--nm-bg);
+  padding: 24px 30px;
+  border-radius: 20px;
+  box-shadow: 
+    inset 5px 5px 10px var(--nm-dark),
+    inset -5px -5px 10px var(--nm-light);
 }
 
 .bio-text { 
-  font-size: 15px; 
-  color: #475569; 
+  font-size: 15.5px; 
+  color: var(--text-main); 
   line-height: 1.9; 
   margin: 0;
 }
-.highlight-text { color: #2563eb; font-weight: 600; }
+.highlight-text { color: var(--accent-blue); font-weight: 700; }
 
-.timeline-desc { color: #64748b; font-size: 14px; margin-top: 10px; line-height: 1.7; }
-
-/* 卡片微调 */
-.clean-card {
-  background: rgba(248, 250, 252, 0.8) !important;
-  border: 1px solid rgba(226, 232, 240, 0.8) !important;
-  border-radius: 12px !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.clean-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.04); }
-.border-tech { background: #ffffff !important; border: 1px solid #e0f2fe !important; }
-.project-desc { font-size: 13.5px; color: #64748b; line-height: 1.7; margin: 0;}
-
-/* ================== 技能标签 Logo 样式 ================== */
+/* ================== 技能标签 & 项目卡片 ================== */
 .tech-tag {
-  padding: 0 12px;
-  transition: all 0.3s ease;
-}
-.tech-tag:hover {
-  transform: translateY(-2px); 
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 6px 16px;
+  height: auto !important;
 }
 .tag-content {
   display: flex;
   align-items: center;
-  gap: 8px; 
+  gap: 10px; 
+  color: var(--text-main);
 }
-.tech-icon {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
+.tech-icon { width: 18px; height: 18px; object-fit: contain; }
+
+/* 项目卡片 */
+.neu-card {
+  background-color: var(--nm-bg) !important;
+  border-radius: 20px !important;
+  padding: 10px;
+  /* 默认凸起 */
+  box-shadow: 
+    8px 8px 16px var(--nm-dark),
+    -8px -8px 16px var(--nm-light) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* 卡片悬停呈现物理按压感 */
+.neu-card:hover { 
+  transform: scale(0.98); /* 稍微缩小模拟按压 */
+  box-shadow: 
+    inset 6px 6px 12px var(--nm-dark),
+    inset -6px -6px 12px var(--nm-light) !important;
 }
 
+.project-desc { font-size: 14px; color: var(--text-muted); line-height: 1.8; margin: 0;}
+.timeline-desc { color: var(--text-muted); font-size: 14.5px; margin-top: 10px; line-height: 1.8; }
+
+/* ================== 移动端适配 ================== */
 @media screen and (max-width: 900px) {
   .login-container { 
-    padding: 15px; 
-    /* 🌟 核心修复1：固定高度为视口高度，让内部产生滚动 */
+    padding: 0; 
     height: 100dvh; 
-    min-height: 100vh; /* 兼容老浏览器 */
     overflow-y: auto; 
-    /* 🌟 核心修复2：开启 iOS 惯性平滑滚动，解决卡顿感 */
-    -webkit-overflow-scrolling: touch; 
-    /* 🌟 核心修复3：移除 flex 布局，防止高度计算失效 */
     display: block; 
   }
   
-  .login-card.portfolio-card { 
+  .portfolio-card { 
     flex-direction: column; 
     height: auto; 
-    min-height: 100%; /* 让卡片至少撑满整屏 */
-    overflow: visible; 
+    min-height: 100%; 
+    border-radius: 0; /* 手机端取消外层大圆角 */
+    box-shadow: none;
   }
   
   .sidebar-box { 
     width: 100%; 
-    border-right: none; 
-    border-bottom: 1px solid #e2e8f0; 
+    box-shadow: 0 10px 15px -10px var(--nm-dark);
     padding: 40px 30px 30px;
   }
   
-  .lottie-wrapper { 
-    display: none; 
-  }
+  .lottie-wrapper { display: none; }
   
   .content-box { 
     height: auto; 
-    overflow: visible; 
+    margin: 0;
+    border-radius: 0;
+    /* 手机端取消内凹大屏幕感，改为平面铺展 */
+    box-shadow: none;
   }
   
   .scroll-container { 
@@ -468,47 +481,12 @@ onMounted(() => {
   }
 }
 
-/* 2. 极致适配纯手机端 (宽 <= 600px) */
 @media screen and (max-width: 600px) {
-  .login-container { 
-    padding: 0; 
-    /* height 和 overflow 会自动继承 900px 里的设定，无需重复写 */
-  }
-  
-  .login-card.portfolio-card { 
-    border-radius: 0; 
-    border: none;
-    box-shadow: none;
-  }
-  
-  .sidebar-box { 
-    padding: 35px 20px 25px; 
-  }
-  
-  .avatar {
-    width: 90px;
-    height: 90px;
-    margin-bottom: 12px;
-  }
-  
-  .logo-title {
-    font-size: 26px;
-  }
-  
-  .scroll-container { 
-    padding: 30px 20px; 
-  }
-  
-  .section-block { 
-    margin-bottom: 40px; 
-  }
-  
-  .section-title {
-    font-size: 20px;
-  }
-  
-  .bio-text {
-    font-size: 14px; 
-  }
+  .avatar-well { width: 100px; height: 100px; }
+  .avatar { width: 86px; height: 86px; }
+  .logo-title { font-size: 26px; }
+  .scroll-container { padding: 30px 20px; }
+  .section-block { margin-bottom: 45px; }
+  .neu-text-well { padding: 20px; }
 }
 </style>
