@@ -78,7 +78,7 @@ const chatHistories = ref<Record<string, Message[]>>({
 })
 
 // 2. 传送门：当前显示的界面直接映射到对应的宝库抽屉里，再也不需要 watch 来回搬运！
-const messageList = computed(() => chatHistories.value[currentAgentId.value])
+const messageList = computed(() => chatHistories.value[currentAgentId.value])!
 
 // 3. 切换身份时，只需要做一件事：滚动到页面底部
 watch(currentAgentId, () => {
@@ -115,7 +115,7 @@ const handleCallOpenClaw = async () => {
   isSearching.value = true
 
   // 🌟 取出当前专家的专属数组，直接往里面写！
-  const currentList = chatHistories.value[currentAgentId.value]
+  const currentList = chatHistories.value[currentAgentId.value]!
 
   const historyPayload = currentList
     .filter(m => !m.isError && m.content) 
