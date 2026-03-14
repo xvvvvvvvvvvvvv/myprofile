@@ -246,19 +246,21 @@ watch(() => props.show, (newVal) => {
         </div>
         <div class="header-right">
           <div class="tech-badge hide-on-mobile">
-            <span class="fw-bold">OpenClaw</span> 驱动
+            <span class="fw-bold">OpenClaw</span> Engine
           </div>
-          <div class="close-btn" @click="emit('update:show', false)">✕</div>
+          <div class="close-btn" @click="emit('update:show', false)">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+          </div>
         </div>
       </div>
 
       <div class="chat-body" ref="chatContainerRef">
         <div v-if="messageList.length === 0" class="empty-state">
-          <div class="empty-lobster">
-            {{ currentAgentId === 'guest-bot' ? '🦞' : '🤖' }}
+          <div class="empty-icon">
+            {{ currentAgentId === 'guest-bot' ? '🦞' : '⌘' }}
           </div>
           <div class="empty-text">
-            {{ currentAgentId === 'guest-bot' ? '“找本龙虾有何贵干？”' : '“专家已就位，请描述您的问题。”' }}
+            {{ currentAgentId === 'guest-bot' ? 'System Ready. How can I help you today?' : 'Expert initialized. Awaiting input.' }}
           </div>
         </div>
 
@@ -269,21 +271,21 @@ watch(() => props.show, (newVal) => {
           :class="msg.role === 'user' ? 'is-user' : 'is-ai'"
         >
           <div class="avatar" :class="msg.role === 'user' ? 'avatar-user' : 'avatar-ai'">
-            <img v-if="msg.role === 'user'" src="/user.png" class="avatar-img" alt="我" />
+            <img v-if="msg.role === 'user'" src="/user.png" class="avatar-img" alt="User" />
             <img v-else src="/lobster.png" class="avatar-img" alt="AI" />
           </div>
           
           <div class="bubble" :class="{ 'error-bubble': msg.isError }">
-  <div v-if="msg.role === 'user'">{{ msg.content }}</div>
-  
-  <div 
-    v-else 
-    class="markdown-body" 
-    v-html="renderMarkdown(msg.content)"
-  ></div>
+            <div v-if="msg.role === 'user'" class="user-text">{{ msg.content }}</div>
+            
+            <div 
+              v-else 
+              class="markdown-body" 
+              v-html="renderMarkdown(msg.content)"
+            ></div>
 
-  <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
-</div>
+            <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
+          </div>
         </div>
       </div>
 
@@ -295,31 +297,30 @@ watch(() => props.show, (newVal) => {
             class="quick-tag"
             @click="sendQuickMessage(msg)"
           >
-            <div class="markdown-body" v-html="renderMarkdown(msg)"></div>
+            {{ msg.replace(/[#*`_~]/g, '') }}
           </span>
         </div>
 
         <div class="chat-footer">
-          <n-input 
-            ref="inputRef"
-            v-model:value="searchQuery" 
-            type="text" 
-            placeholder="输入指令..." 
-            class="chat-input"
-            @keydown.enter="handleEnter"
-            :disabled="isSearching"
-            size="large"
-          >
-            <template #suffix>
-              <div 
-                class="send-btn-icon" 
-                :class="{ 'is-active': searchQuery.trim().length > 0 }"
-                @click="handleCallOpenClaw"
-              >
-                ↑
-              </div>
-            </template>
-          </n-input>
+          <div class="input-container">
+            <n-input 
+              ref="inputRef"
+              v-model:value="searchQuery" 
+              type="textarea" 
+              placeholder="Ask anything or type a command..." 
+              class="chat-input"
+              @keydown.enter="handleEnter"
+              :disabled="isSearching"
+              :autosize="{ minRows: 1, maxRows: 4 }"
+            />
+            <div 
+              class="send-btn-icon" 
+              :class="{ 'is-active': searchQuery.trim().length > 0 && !isSearching }"
+              @click="handleCallOpenClaw"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -328,675 +329,334 @@ watch(() => props.show, (newVal) => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+/* ================== 全局重构为极致现代极简风 (SaaS Style) ================== */
 .chat-casing {
-
   width: calc(100vw - 32px);
-
-  max-width: 800px;
-
+  max-width: 860px; /* 稍微加宽一点，更适合阅读代码 */
   height: 85vh; 
-
-  max-height: 850px;
-
-  background: rgba(255, 255, 255, 0.85);
-
-  backdrop-filter: blur(25px);
-
-  -webkit-backdrop-filter: blur(25px);
-
-  border-radius: 20px;
-
+  max-height: 900px;
+  background: #ffffff; /* 纯白背景，摒弃毛玻璃，极致专业 */
+  border-radius: 16px;
   display: flex;
-
   flex-direction: column;
-
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.6) inset;
-
+  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.2); /* 苹果原生质感阴影 */
   overflow: hidden;
-
-  font-family: 'Nunito', -apple-system, sans-serif;
-
+  font-family: 'Inter', -apple-system, sans-serif; /* 换用更硬朗专业的 Inter 字体 */
 }
 
-
-
-/* 头部 */
-
+/* ================== 头部 ================== */
 .chat-header {
-
-  height: 64px;
-
-  background: transparent;
-
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-
+  height: 60px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
-
   align-items: center;
-
   justify-content: space-between;
-
-  padding: 0 24px;
-
+  padding: 0 20px;
+  flex-shrink: 0;
 }
+.header-left, .header-right { display: flex; align-items: center; gap: 12px; }
 
-.header-left, .header-right {
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 12px;
-
-}
-
+/* 更小更精致的呼吸灯 */
 .status-dot {
-
-  width: 10px;
-
-  height: 10px;
-
+  width: 8px;
+  height: 8px;
   background: #10b981;
-
   border-radius: 50%;
-
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-
-}
-
-.header-title {
-
-  font-weight: 800;
-
-  color: #1e293b;
-
-  font-size: 17px;
-
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
 .tech-badge {
-
+  font-family: 'Fira Code', monospace;
   font-size: 12px;
-
   color: #64748b;
-
-  background: rgba(241, 245, 249, 0.8);
-
-  padding: 4px 12px;
-
-  border-radius: 20px;
-
-  border: 1px solid rgba(226, 232, 240, 0.8);
-
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
-
-.tech-badge .fw-bold { color: #0f172a; font-weight: 800; }
-
-
+.tech-badge .fw-bold { color: #334155; font-weight: 600; }
 
 .close-btn {
-
-  width: 32px;
-
-  height: 32px;
-
+  width: 28px;
+  height: 28px;
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
-  background: rgba(241, 245, 249, 0.8);
-
-  border-radius: 50%;
-
-  color: #64748b;
-
+  border-radius: 6px;
+  color: #94a3b8;
   cursor: pointer;
-
-  font-size: 14px;
-
   transition: all 0.2s;
-
 }
+.close-btn:hover { background: #f1f5f9; color: #0f172a; }
 
-.close-btn:hover {
-
-  background: #e2e8f0;
-
-  color: #0f172a;
-
+/* 下拉框专业化改造 */
+.agent-selector { width: 190px; }
+:deep(.n-base-selection) {
+  border-radius: 6px;
+  background-color: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
 }
-
+:deep(.n-base-selection:hover) { background-color: #f8fafc !important; border-color: #e2e8f0 !important; }
+:deep(.n-base-selection .n-base-selection-label) { font-weight: 600; color: #1e293b; font-size: 14px; }
 
 
 /* ================== 对话区域 ================== */
-
 .chat-body {
-
   flex: 1;
-
-  padding: 24px 30px;
-
+  padding: 24px 32px;
   overflow-y: auto;
-
   display: flex;
-
   flex-direction: column;
-
-  gap: 24px;
-
-  background-color: rgba(248, 250, 252, 0.4);
-
-  background-image: radial-gradient(rgba(203, 213, 225, 0.4) 1px, transparent 1px);
-
-  background-size: 20px 20px;
-
+  gap: 32px; /* 增加消息间距，呼吸感更强 */
+  background-color: #ffffff;
 }
-
 .chat-body::-webkit-scrollbar { width: 6px; }
-
 .chat-body::-webkit-scrollbar-track { background: transparent; }
-
-.chat-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-
-
+.chat-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
 
 .empty-state {
-
   margin: auto;
-
   text-align: center;
-
   transform: translateY(-20px);
-
 }
-
-.empty-lobster {
-
-  font-size: 50px;
-
-  margin-bottom: 12px;
-
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-
-  animation: float 3s ease-in-out infinite;
-
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  filter: grayscale(0.2); /* 降低一点饱和度，显得高级 */
 }
-
-.empty-text { color: #64748b; font-size: 15px; font-weight: 600; }
-
-@keyframes float {
-
-  0% { transform: translateY(0px); }
-
-  50% { transform: translateY(-10px); }
-
-  100% { transform: translateY(0px); }
-
-}
-
-
+.empty-text { color: #94a3b8; font-size: 14px; font-weight: 500; font-family: 'Fira Code', monospace; }
 
 /* 消息包裹层 */
-
 .message-wrapper {
-
   display: flex;
-
-  gap: 14px;
-
-  max-width: 88%;
-
+  gap: 16px;
+  max-width: 90%;
 }
-
 .is-user { align-self: flex-end; flex-direction: row-reverse; }
-
 .is-ai { align-self: flex-start; }
 
-
-
+/* 头像扁平化 */
 .avatar {
-
-  width: 38px;
-
-  height: 38px;
-
-  border-radius: 12px;
-
+  width: 30px;
+  height: 30px;
+  border-radius: 6px; /* 极客风小方角 */
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   flex-shrink: 0;
-
-  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-
-  background: white;
-
-  border: 1px solid rgba(226, 232, 240, 0.6);
-
-  padding: 2px;
-
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
 }
+.avatar-user { border-color: #cbd5e1; }
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
 
-.avatar-img { width: 100%; height: 100%; object-fit: contain; border-radius: 9px; }
-
-
-
-/* 气泡 */
-
+/* 气泡扁平化、去饱和度 */
 .bubble {
-
-  padding: 14px 18px;
-
+  padding: 12px 16px;
   font-size: 15px;
-
   line-height: 1.6;
-
-  white-space: pre-wrap;
-
-  word-break: break-all;
-
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-
+  border-radius: 8px; /* 克制的圆角 */
+  box-shadow: none; /* 移除浮夸的阴影 */
 }
-
 .is-user .bubble {
-
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-
-  color: white;
-
-  border-radius: 18px 18px 4px 18px;
-
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-
+  background: #0f172a; /* 深邃的 Slate 色，极具开发者极客感，替代原本的亮绿色 */
+  color: #f8fafc;
+  border-bottom-right-radius: 2px;
 }
-
+.user-text {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
 .is-ai .bubble {
-
-  background: rgba(255, 255, 255, 0.95);
-
+  background: #f8fafc; /* 极浅的灰底，划分层级 */
   color: #334155;
-
-  border-radius: 18px 18px 18px 4px;
-
-  border: 1px solid rgba(226, 232, 240, 0.8);
-
+  border: 1px solid #f1f5f9;
+  border-bottom-left-radius: 2px;
+  width: 100%;
 }
-
 .error-bubble {
-
-  color: #ef4444 !important;
-
-  background: #fee2e2 !important;
-
+  color: #b91c1c !important;
+  background: #fef2f2 !important;
   border: 1px solid #fecaca !important;
-
 }
-
-
 
 .cursor {
-
   display: inline-block;
-
   width: 6px;
-
   height: 15px;
-
-  background: #94a3b8;
-
+  background: #0f172a;
   margin-left: 4px;
-
   vertical-align: middle;
-
   animation: blink 1s step-end infinite;
-
 }
-
 @keyframes blink { 50% { opacity: 0; } }
 
 
-
-/* ================== 底部输入区 ================== */
-
+/* ================== 高级底部输入区 ================== */
 .chat-footer-wrapper {
-
-  background: rgba(255, 255, 255, 0.6);
-
-  border-top: 1px solid rgba(226, 232, 240, 0.6);
-
+  background: #ffffff;
+  border-top: 1px solid #f1f5f9;
   display: flex;
-
   flex-direction: column;
-
 }
-
-
 
 .quick-messages {
-
   display: flex;
-
-  gap: 10px;
-
+  gap: 8px;
   padding: 16px 24px 0 24px;
-
   overflow-x: auto;
-
   scrollbar-width: none;
-
 }
-
 .quick-messages::-webkit-scrollbar { display: none; }
-
 .quick-tag {
-
-  background: rgba(248, 250, 252, 0.8);
-
-  border: 1px solid rgba(226, 232, 240, 0.8);
-
-  color: #475569;
-
-  padding: 6px 14px;
-
-  border-radius: 20px;
-
-  font-size: 13px;
-
-  font-weight: 600;
-
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-
   white-space: nowrap;
-
-  transition: all 0.2s;
-
-  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-
+  transition: all 0.15s ease;
 }
-
 .quick-tag:hover {
-
-  background: #ecfdf5;
-
-  border-color: #a7f3d0;
-
-  color: #059669;
-
-  transform: translateY(-1px);
-
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
 }
-
-
 
 .chat-footer {
-
   padding: 16px 24px 24px 24px;
-
 }
 
-
+/* 仿 ChatGPT / Cursor 风格的一体化输入框 */
+.input-container {
+  position: relative;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px;
+}
+.input-container:focus-within {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
 
 :deep(.n-input) {
-
-  border-radius: 16px;
-
-  background-color: rgba(248, 250, 252, 0.6);
-
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-
-}
-
-:deep(.n-input:hover), :deep(.n-input:focus-within) {
-
-  background-color: #fff;
-
-}
-
-:deep(.n-input .n-input__input-el) {
-
-  font-size: 15px;
-
-  padding: 6px 0;
-
-}
-
-
-
-.send-btn-icon {
-
-  width: 28px;
-
-  height: 28px;
-
-  border-radius: 50%;
-
-  background: #e2e8f0;
-
-  color: white;
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  font-weight: bold;
-
-  cursor: not-allowed;
-
-  transition: all 0.3s;
-
-}
-
-.send-btn-icon.is-active {
-
-  background: #10b981;
-
-  cursor: pointer;
-
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
-
-}
-
-.send-btn-icon.is-active:hover {
-
-  background: #059669;
-
-  transform: translateY(-1px);
-
-}
-
-
-
-/* ================== 📱 移动端媒体查询适配 ================== */
-
-@media (max-width: 768px) {
-
-  .chat-casing {
-
-    width: 100vw;
-
-    height: 100dvh; /* 使用 dvh 解决移动端浏览器导航栏遮挡问题 */
-
-    max-height: 100dvh;
-
-    border-radius: 0;
-
-    margin: 0;
-
-  }
-
-  
-
-  .chat-header {
-
-    padding: 0 16px;
-
-    height: 56px;
-
-  }
-
-  
-
-  .hide-on-mobile {
-
-    display: none;
-
-  }
-
-
-
-  .chat-body {
-
-    padding: 16px;
-
-    gap: 16px;
-
-  }
-
-  
-
-  .message-wrapper {
-
-    max-width: 95%; /* 手机屏幕小，气泡可以放宽一点 */
-
-    gap: 10px;
-
-  }
-
-
-
-  .avatar {
-
-    width: 32px;
-
-    height: 32px;
-
-  }
-
-
-
-  .bubble {
-
-    padding: 10px 14px;
-
-    font-size: 14px;
-
-  }
-
-
-
-  .quick-messages {
-
-    padding: 12px 16px 0 16px;
-
-  }
-
-
-
-  .chat-footer {
-
-    /* iOS 底部安全区防遮挡 */
-
-    padding: 12px 16px calc(16px + env(safe-area-inset-bottom)) 16px;
-
-  }
-
-}
-/* 🌟 新增：下拉选择器的样式微调，使其融入现有的 UI 风格 */
-.agent-selector {
-  width: 180px;
-  font-weight: 800;
-}
-:deep(.n-base-selection) {
-  border-radius: 8px;
   background-color: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  flex: 1;
 }
-:deep(.n-base-selection:hover), :deep(.n-base-selection--active) {
-  background-color: rgba(241, 245, 249, 0.8) !important;
-}
-:deep(.n-base-selection .n-base-selection-label) {
+:deep(.n-input .n-input__textarea-el) {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  padding: 10px 12px;
   color: #1e293b;
 }
 
-/* ================== 🚀 Markdown 与代码块专属深度美化 🚀 ================== */
+/* 专业发送按钮 */
+.send-btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  transition: all 0.2s ease;
+  margin: 4px;
+  flex-shrink: 0;
+}
+.send-btn-icon.is-active {
+  background: #0f172a; /* 与用户气泡呼应的高级黑 */
+  color: #ffffff;
+  cursor: pointer;
+}
+.send-btn-icon.is-active:hover {
+  background: #334155;
+}
+
+
+/* ================== 🚀 Markdown 与代码块 (保持优秀的原子黑客风) ================== */
 :deep(.markdown-body) {
   font-size: 15px;
   line-height: 1.7;
-  color: #334155;
-  /* 如果你的气泡背景是黑色的，请把上面 color 改为 #e2e8f0 */
+  color: #1e293b;
 }
-
-/* 基础排版 */
-:deep(.markdown-body p) { margin-top: 0; margin-bottom: 12px; }
+:deep(.markdown-body p) { margin-top: 0; margin-bottom: 14px; }
 :deep(.markdown-body p:last-child) { margin-bottom: 0; }
-:deep(.markdown-body strong) { font-weight: 700; color: #0f172a; }
+:deep(.markdown-body strong) { font-weight: 600; color: #0f172a; }
 
-/* 行内小代码块 (例如文本里的 `npm install`) */
+/* 行内小代码块扁平化 */
 :deep(.markdown-body code:not(pre code)) {
-  background-color: rgba(16, 185, 129, 0.1); /* 微弱的绿底色，呼应 OpenClaw */
-  color: #059669;
-  padding: 3px 6px;
-  border-radius: 6px;
+  background-color: #e2e8f0;
+  color: #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
   font-family: 'Fira Code', monospace;
   font-size: 0.85em;
-  font-weight: 600;
 }
 
-/* 🌟 核心：大段代码块的外壳 */
 :deep(.markdown-body pre) {
-  background-color: #1e1e1e; /* 极客深色底色 */
-  border-radius: 12px;
-  padding: 42px 16px 16px 16px; /* 顶部留出 42px 空间放红黄绿小点 */
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 38px 16px 16px 16px;
   margin: 16px 0;
   overflow-x: auto;
   position: relative;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  /* 移除阴影，完全扁平 */
+  border: 1px solid #334155;
 }
 
-/* 🎨 纯 CSS 画出代码块左上角的 Mac 红黄绿小点 */
 :deep(.markdown-body pre::before) {
   content: " ";
   position: absolute;
-  top: 15px;
-  left: 16px;
-  width: 11px;
-  height: 11px;
+  top: 14px;
+  left: 14px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #ff5f56;
-  box-shadow: 18px 0 #ffbd2e, 36px 0 #27c93f;
+  background: #ef4444;
+  box-shadow: 16px 0 #eab308, 32px 0 #22c55e;
 }
 
-/* 代码内部文字样式 */
 :deep(.markdown-body pre code) {
   font-family: 'Fira Code', Consolas, Monaco, monospace;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.6;
   color: #abb2bf;
-  background: transparent;
-  padding: 0;
 }
 
-/* 滚动条优雅化 */
-:deep(.markdown-body pre::-webkit-scrollbar) { height: 8px; }
-:deep(.markdown-body pre::-webkit-scrollbar-thumb) { 
-  background-color: rgba(255, 255, 255, 0.2); 
-  border-radius: 4px; 
-}
-:deep(.markdown-body pre::-webkit-scrollbar-track) { background: transparent; }
 
+/* ================== 📱 移动端适配 ================== */
 @media (max-width: 768px) {
-  .agent-selector {
-    width: 150px;
+  .chat-casing {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
   }
+  .chat-header { padding: 0 16px; height: 56px; }
+  .hide-on-mobile { display: none; }
+  .agent-selector { width: 140px; }
+  .chat-body { padding: 16px; gap: 24px; }
+  .message-wrapper { max-width: 95%; gap: 10px; }
+  .avatar { width: 28px; height: 28px; }
+  .bubble { padding: 10px 14px; font-size: 14px; }
+  .quick-messages { padding: 12px 16px 0 16px; }
+  .chat-footer { padding: 12px 16px calc(16px + env(safe-area-inset-bottom)) 16px; }
 }
 </style>
