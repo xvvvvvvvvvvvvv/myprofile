@@ -1,44 +1,37 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue' // 🌟 注意这里引入了 computed
 import { NModal, NInput, NSelect } from 'naive-ui'
 import { marked } from 'marked'
-import { markedHighlight } from 'marked-highlight' // 引入新插件
+import { markedHighlight } from 'marked-highlight' 
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-dark.css'
 
-// 1. 使用官方推荐的 use() 语法注入高亮插件，并加上 TS 类型注解
+// 1. Markdown 配置
 marked.use(markedHighlight({
   langPrefix: 'hljs language-',
-  highlight(code: string, lang: string) { // 👈 加上了 :string，解决 TS 报错
+  highlight(code: string, lang: string) { 
     const language = hljs.getLanguage(lang) ? lang : 'plaintext'
     return hljs.highlight(code, { language }).value
   }
 }))
 
-// 2. 单独配置开启回车换行
-marked.use({
-  breaks: true
-})
+marked.use({ breaks: true })
 
-// 3. 渲染函数（强转为 string 满足 Vue v-html 的类型要求）
 const renderMarkdown = (text: string) => {
   if (!text) return ''
-  return marked.parse(text) as string // 👈 加上 as string，让 TS 安心
+  return marked.parse(text) as string 
 }
+
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', val: boolean): void }>()
 
 const searchQuery = ref('')
 const isSearching = ref(false)
 const chatContainerRef = ref<HTMLElement | null>(null)
-
-// 获取输入框 DOM，用于结束时自动聚焦
 const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 
-// ================== 🌟 新增：多重身份配置 ==================
-const currentAgentId = ref('guest-bot') // 默认身份
-
-// 下拉菜单的选项配置，必须与 Django 后端的 ALLOWED_AGENTS 白名单对齐
+// 身份配置
+const currentAgentId = ref('guest-bot') 
 const agentOptions = [
   { label: '🦞 虾小毛 (默认接待)', value: 'guest-bot' },
   { label: '💻 高级前端专家', value: 'engineering-frontend-developer' },
@@ -46,24 +39,7 @@ const agentOptions = [
   { label: '🎨 趣味交互设计', value: 'design-whimsy-injector' }
 ]
 
-// 监听身份切换：清空对话历史，给用户重新开始的感觉
-// 🌟 核心：监听身份切换，实现记忆的“存”与“取”
-watch(currentAgentId, (newAgent, oldAgent) => {
-  if (newAgent !== oldAgent) {
-    // 1. 切走前，把当前屏幕上的聊天记录存进旧专家的“记忆字典”里
-    if (oldAgent) {
-      chatHistories.value[oldAgent] = [...messageList.value]
-    }
-    
-    // 2. 切过来时，从新专家的“记忆字典”里把历史记录读出来
-    messageList.value = chatHistories.value[newAgent] || []
-    
-    scrollToBottom()
-  }
-})
-// =========================================================
-
-// 生成或获取当前访客的专属 Session ID
+// Session ID
 const getOrCreateSessionId = () => {
   let sid = sessionStorage.getItem('guest_session_id')
   if (!sid) {
@@ -74,8 +50,7 @@ const getOrCreateSessionId = () => {
 }
 const sessionId = ref(getOrCreateSessionId())
 
-// 预设快捷消息 (可以根据选中的身份动态变化，这里先做个简单的计算属性演示)
-import { computed } from 'vue'
+// 快捷消息
 const quickMessages = computed(() => {
   if (currentAgentId.value === 'engineering-frontend-developer') {
     return ['👋 Vue3 怎么学？', '💻 帮我写个轮播图', '🏗️ 评估一下这套架构']
@@ -85,14 +60,16 @@ const quickMessages = computed(() => {
   return ['👋 你是谁？', '💻 介绍下你的主人', '🏗️ 网站架构是怎么做的？']
 })
 
-// 数据结构
 interface Message {
   id: number
   role: 'user' | 'ai'
   content: string
   isError?: boolean
 }
-// 🌟 新增：创建一个“记忆字典”，用来单独保存每个 Agent 的聊天记录
+
+// ================== 🌟 核心破局：终极记忆管理 ==================
+
+// 1. 记忆宝库：一开始就为所有专家开辟好空间，作为【绝对的唯一数据源】
 const chatHistories = ref<Record<string, Message[]>>({
   'guest-bot': [],
   'engineering-frontend-developer': [],
@@ -100,26 +77,15 @@ const chatHistories = ref<Record<string, Message[]>>({
   'design-whimsy-injector': []
 })
 
-// 当前正在显示的聊天窗口列表
-const messageList = ref<Message[]>([])
+// 2. 传送门：当前显示的界面直接映射到对应的宝库抽屉里，再也不需要 watch 来回搬运！
+const messageList = computed(() => chatHistories.value[currentAgentId.value])
 
-// 🌟 核心：监听身份切换，实现记忆的“存”与“取”
-watch(currentAgentId, (newAgent, oldAgent) => {
-  if (newAgent !== oldAgent) {
-    // 1. 切走前，把当前屏幕上的聊天记录存进旧专家的“记忆字典”里
-    if (oldAgent) {
-      chatHistories.value[oldAgent] = [...messageList.value]
-    }
-    
-    // 2. 切过来时，从新专家的“记忆字典”里把历史记录读出来
-    // 如果还没聊过天，就会读到一个空数组 []
-    messageList.value = chatHistories.value[newAgent] || []
-    
-    scrollToBottom()
-  }
+// 3. 切换身份时，只需要做一件事：滚动到页面底部
+watch(currentAgentId, () => {
+  scrollToBottom()
 })
+// =========================================================
 
-// 自动滚动到最底部
 const scrollToBottom = () => {
   nextTick(() => {
     if (chatContainerRef.value) {
@@ -128,13 +94,11 @@ const scrollToBottom = () => {
   })
 }
 
-// 点击快捷指令直接发送
 const sendQuickMessage = (text: string) => {
   searchQuery.value = text
   handleCallOpenClaw()
 }
 
-// 解决拼音输入法下敲回车直接发送的 Bug
 const handleEnter = (e: KeyboardEvent) => {
   if (e.isComposing || e.keyCode === 229) {
     return
@@ -143,7 +107,6 @@ const handleEnter = (e: KeyboardEvent) => {
   handleCallOpenClaw()
 }
 
-// 核心发送逻辑
 const handleCallOpenClaw = async () => {
   if (!searchQuery.value.trim() || isSearching.value) return
   
@@ -151,7 +114,10 @@ const handleCallOpenClaw = async () => {
   searchQuery.value = '' 
   isSearching.value = true
 
-  const historyPayload = messageList.value
+  // 🌟 取出当前专家的专属数组，直接往里面写！
+  const currentList = chatHistories.value[currentAgentId.value]
+
+  const historyPayload = currentList
     .filter(m => !m.isError && m.content) 
     .map(m => ({
       role: m.role === 'ai' ? 'assistant' : 'user', 
@@ -160,7 +126,8 @@ const handleCallOpenClaw = async () => {
   
   historyPayload.push({ role: 'user', content: userText })
 
-  messageList.value.push({
+  // 写入当前专家的记录
+  currentList.push({
     id: Date.now(),
     role: 'user',
     content: userText
@@ -168,7 +135,7 @@ const handleCallOpenClaw = async () => {
   scrollToBottom()
 
   const aiMessageId = Date.now() + 1
-  messageList.value.push({
+  currentList.push({
     id: aiMessageId,
     role: 'ai',
     content: ''
@@ -176,14 +143,15 @@ const handleCallOpenClaw = async () => {
   scrollToBottom()
 
   try {
-    const response = await fetch('/api/portfolio/openclaw/send/', { // 🌟 确保路由与 Django 对应
+    const response = await fetch('/api/portfolio/openclaw/send/', { 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         command: userText, 
         messages: historyPayload, 
+        // 🌟 正确拼接：使用了反引号 ` 
         sessionId: `${sessionId.value}_${currentAgentId.value}`,
-        agentId: currentAgentId.value // 🌟 核心：把当前选中的专家 ID 传给后端！
+        agentId: currentAgentId.value 
       }) 
     })
 
@@ -212,7 +180,8 @@ const handleCallOpenClaw = async () => {
 
             try {
               const data = JSON.parse(dataStr)
-              const currentAiMsg = messageList.value.find(m => m.id === aiMessageId)
+              // 直接在专属数组里查找修改
+              const currentAiMsg = currentList.find(m => m.id === aiMessageId)
               
               if (currentAiMsg) {
                 if (data.error) {
@@ -231,7 +200,7 @@ const handleCallOpenClaw = async () => {
       }
     }
   } catch (error: any) {
-    const currentAiMsg = messageList.value.find(m => m.id === aiMessageId)
+    const currentAiMsg = currentList.find(m => m.id === aiMessageId)
     if (currentAiMsg) {
       currentAiMsg.content = `通信中断: ${error.message}`
       currentAiMsg.isError = true
