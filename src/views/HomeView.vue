@@ -425,21 +425,23 @@ onMounted(() => {
   object-fit: contain;
 }
 
-/* ================== 🌟🌟🌟 响应式设计核心 (移动端与平板适配) ================== */
-
-/* 1. 平板及竖屏设备 (宽 <= 900px) */
 @media screen and (max-width: 900px) {
   .login-container { 
     padding: 15px; 
-    height: auto;
-    min-height: 100vh;
+    /* 🌟 核心修复1：固定高度为视口高度，让内部产生滚动 */
+    height: 100dvh; 
+    min-height: 100vh; /* 兼容老浏览器 */
     overflow-y: auto; 
-    align-items: flex-start; 
+    /* 🌟 核心修复2：开启 iOS 惯性平滑滚动，解决卡顿感 */
+    -webkit-overflow-scrolling: touch; 
+    /* 🌟 核心修复3：移除 flex 布局，防止高度计算失效 */
+    display: block; 
   }
   
   .login-card.portfolio-card { 
     flex-direction: column; 
     height: auto; 
+    min-height: 100%; /* 让卡片至少撑满整屏 */
     overflow: visible; 
   }
   
@@ -470,6 +472,7 @@ onMounted(() => {
 @media screen and (max-width: 600px) {
   .login-container { 
     padding: 0; 
+    /* height 和 overflow 会自动继承 900px 里的设定，无需重复写 */
   }
   
   .login-card.portfolio-card { 
