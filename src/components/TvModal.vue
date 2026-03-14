@@ -1,7 +1,25 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import { NModal, NInput, NSelect } from 'naive-ui'
+import { marked } from 'marked'
+import hljs from 'highlight.js'
+// 引入深色科技风高亮主题
+import 'highlight.js/styles/atom-one-dark.css'
 
+// 2. 配置 marked，让 highlight.js 接管代码块的渲染
+marked.setOptions({
+  highlight: function (code, lang) {
+    const language = hljs.getLanguage(lang) ? lang : 'plaintext'
+    return hljs.highlight(code, { language }).value
+  },
+  breaks: true // 允许识别文本里的回车换行
+})
+
+// 3. 准备渲染函数：把 AI 返回的纯文本转化为带样式的 HTML
+const renderMarkdown = (text: string) => {
+  if (!text) return ''
+  return marked.parse(text)
+}
 const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', val: boolean): void }>()
 
@@ -265,7 +283,7 @@ watch(() => props.show, (newVal) => {
             class="quick-tag"
             @click="sendQuickMessage(msg)"
           >
-            {{ msg }}
+            <div class="markdown-body" v-html="renderMarkdown(msg)"></div>
           </span>
         </div>
 
@@ -897,6 +915,72 @@ watch(() => props.show, (newVal) => {
 :deep(.n-base-selection .n-base-selection-label) {
   color: #1e293b;
 }
+
+/* ================== 🚀 Markdown 与代码块专属深度美化 🚀 ================== */
+:deep(.markdown-body) {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #334155;
+  /* 如果你的气泡背景是黑色的，请把上面 color 改为 #e2e8f0 */
+}
+
+/* 基础排版 */
+:deep(.markdown-body p) { margin-top: 0; margin-bottom: 12px; }
+:deep(.markdown-body p:last-child) { margin-bottom: 0; }
+:deep(.markdown-body strong) { font-weight: 700; color: #0f172a; }
+
+/* 行内小代码块 (例如文本里的 `npm install`) */
+:deep(.markdown-body code:not(pre code)) {
+  background-color: rgba(16, 185, 129, 0.1); /* 微弱的绿底色，呼应 OpenClaw */
+  color: #059669;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* 🌟 核心：大段代码块的外壳 */
+:deep(.markdown-body pre) {
+  background-color: #1e1e1e; /* 极客深色底色 */
+  border-radius: 12px;
+  padding: 42px 16px 16px 16px; /* 顶部留出 42px 空间放红黄绿小点 */
+  margin: 16px 0;
+  overflow-x: auto;
+  position: relative;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* 🎨 纯 CSS 画出代码块左上角的 Mac 红黄绿小点 */
+:deep(.markdown-body pre::before) {
+  content: " ";
+  position: absolute;
+  top: 15px;
+  left: 16px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ff5f56;
+  box-shadow: 18px 0 #ffbd2e, 36px 0 #27c93f;
+}
+
+/* 代码内部文字样式 */
+:deep(.markdown-body pre code) {
+  font-family: 'Fira Code', Consolas, Monaco, monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #abb2bf;
+  background: transparent;
+  padding: 0;
+}
+
+/* 滚动条优雅化 */
+:deep(.markdown-body pre::-webkit-scrollbar) { height: 8px; }
+:deep(.markdown-body pre::-webkit-scrollbar-thumb) { 
+  background-color: rgba(255, 255, 255, 0.2); 
+  border-radius: 4px; 
+}
+:deep(.markdown-body pre::-webkit-scrollbar-track) { background: transparent; }
 
 @media (max-width: 768px) {
   .agent-selector {
