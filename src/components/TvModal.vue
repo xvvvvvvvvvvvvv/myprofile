@@ -47,9 +47,17 @@ const agentOptions = [
 ]
 
 // 监听身份切换：清空对话历史，给用户重新开始的感觉
+// 🌟 核心：监听身份切换，实现记忆的“存”与“取”
 watch(currentAgentId, (newAgent, oldAgent) => {
   if (newAgent !== oldAgent) {
-    messageList.value = [] // 🌟 身份变了，清空本地记录防串戏
+    // 1. 切走前，把当前屏幕上的聊天记录存进旧专家的“记忆字典”里
+    if (oldAgent) {
+      chatHistories.value[oldAgent] = [...messageList.value]
+    }
+    
+    // 2. 切过来时，从新专家的“记忆字典”里把历史记录读出来
+    messageList.value = chatHistories.value[newAgent] || []
+    
     scrollToBottom()
   }
 })
@@ -174,7 +182,7 @@ const handleCallOpenClaw = async () => {
       body: JSON.stringify({ 
         command: userText, 
         messages: historyPayload, 
-        sessionId: '${sessionId.value}_${currentAgentId.value}',
+        sessionId: `${sessionId.value}_${currentAgentId.value}`,
         agentId: currentAgentId.value // 🌟 核心：把当前选中的专家 ID 传给后端！
       }) 
     })
