@@ -84,7 +84,32 @@ interface Message {
   content: string
   isError?: boolean
 }
+// 🌟 新增：创建一个“记忆字典”，用来单独保存每个 Agent 的聊天记录
+const chatHistories = ref<Record<string, Message[]>>({
+  'guest-bot': [],
+  'engineering-frontend-developer': [],
+  'specialized-developer-advocate': [],
+  'design-whimsy-injector': []
+})
+
+// 当前正在显示的聊天窗口列表
 const messageList = ref<Message[]>([])
+
+// 🌟 核心：监听身份切换，实现记忆的“存”与“取”
+watch(currentAgentId, (newAgent, oldAgent) => {
+  if (newAgent !== oldAgent) {
+    // 1. 切走前，把当前屏幕上的聊天记录存进旧专家的“记忆字典”里
+    if (oldAgent) {
+      chatHistories.value[oldAgent] = [...messageList.value]
+    }
+    
+    // 2. 切过来时，从新专家的“记忆字典”里把历史记录读出来
+    // 如果还没聊过天，就会读到一个空数组 []
+    messageList.value = chatHistories.value[newAgent] || []
+    
+    scrollToBottom()
+  }
+})
 
 // 自动滚动到最底部
 const scrollToBottom = () => {
@@ -149,7 +174,7 @@ const handleCallOpenClaw = async () => {
       body: JSON.stringify({ 
         command: userText, 
         messages: historyPayload, 
-        sessionId: sessionId.value,
+        sessionId: '${sessionId.value}_${currentAgentId.value}',
         agentId: currentAgentId.value // 🌟 核心：把当前选中的专家 ID 传给后端！
       }) 
     })
