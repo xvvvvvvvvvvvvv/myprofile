@@ -142,9 +142,9 @@ const handleCallOpenClaw = async () => {
     content: ''
   })
   scrollToBottom()
-
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
   try {
-    const response = await fetch('/api/portfolio/openclaw/send/', { 
+    const response = await fetch(`${baseUrl}/api/portfolio/openclaw/send/`, { 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
