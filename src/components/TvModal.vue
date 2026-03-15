@@ -36,7 +36,8 @@ const agentOptions = [
   { label: '🦞 虾小毛 (默认接待)', value: 'guest-bot' },
   { label: '💻 高级前端专家', value: 'engineering-frontend-developer' },
   { label: '🔥 全栈技术布道师', value: 'specialized-developer-advocate' },
-  { label: '🎨 趣味交互设计', value: 'design-whimsy-injector' }
+  { label: '🎨 趣味交互设计', value: 'design-whimsy-injector' },
+  { label: '🕷️ 爬虫助手', value: 'scrapling' },
 ]
 
 // Session ID
@@ -56,7 +57,10 @@ const quickMessages = computed(() => {
     return ['👋 Vue3 怎么学？', '💻 帮我写个轮播图', '🏗️ 评估一下这套架构']
   } else if (currentAgentId.value === 'design-whimsy-injector') {
     return ['🎉 给我个彩蛋建议', '✨ 这个按钮太无聊了', '🤣 讲个极客笑话']
-  }
+  } 
+  else if (currentAgentId.value === 'scrapling') {
+    return ['介绍下你的功能']
+  } 
   return ['👋 你是谁？', '💻 介绍下你的主人', '🏗️ 网站架构是怎么做的？']
 })
 
