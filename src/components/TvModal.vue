@@ -37,7 +37,7 @@ const agentOptions = [
   { label: '💻 高级前端专家', value: 'engineering-frontend-developer' },
   { label: '🔥 全栈技术布道师', value: 'specialized-developer-advocate' },
   { label: '🎨 趣味交互设计', value: 'design-whimsy-injector' },
-  { label: '🕷️ 爬虫助手', value: 'scrapling' },
+  { label: '🕷️ 爬虫助手', value: 'scrapling' }
 ]
 
 // Session ID
