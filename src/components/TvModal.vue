@@ -74,12 +74,9 @@ interface Message {
 // ================== 🌟 核心破局：终极记忆管理 ==================
 
 // 1. 记忆宝库：一开始就为所有专家开辟好空间，作为【绝对的唯一数据源】
-const chatHistories = ref<Record<string, Message[]>>({
-  'guest-bot': [],
-  'engineering-frontend-developer': [],
-  'specialized-developer-advocate': [],
-  'design-whimsy-injector': []
-})
+const chatHistories = ref<Record<string, Message[]>>(
+  Object.fromEntries(agentOptions.map(opt => [opt.value, []]))
+)
 
 // 2. 传送门：当前显示的界面直接映射到对应的宝库抽屉里，再也不需要 watch 来回搬运！
 const messageList = computed(() => chatHistories.value[currentAgentId.value] as Message[])
