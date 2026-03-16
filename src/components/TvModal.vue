@@ -30,16 +30,36 @@ const isSearching = ref(false)
 const chatContainerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 
-// 身份配置
-const currentAgentId = ref('guest-bot') 
+// 🌟 纯净版：移除了 Emoji，换成了内置的 SVG 图标字符串
 const agentOptions = [
-  { label: '🦞 虾小毛 (默认)', value: 'guest-bot' },
-  { label: '💻 高级前端专家', value: 'engineering-frontend-developer' },
-  { label: '🔥 全栈技术布道师', value: 'specialized-developer-advocate' },
-  { label: '🎨 趣味交互设计', value: 'design-whimsy-injector' },
-  { label: '🕷️ 爬虫助手', value: 'scrapling' }
+  { 
+    label: '虾小毛 (默认)', 
+    value: 'guest-bot',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16.01"/><line x1="16" y1="16" x2="16" y2="16.01"/></svg>`
+  },
+  { 
+    label: '高级前端专家', 
+    value: 'engineering-frontend-developer',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`
+  },
+  { 
+    label: '全栈技术布道师', 
+    value: 'specialized-developer-advocate',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>`
+  },
+  { 
+    label: '趣味交互设计', 
+    value: 'design-whimsy-injector',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.836-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>`
+  },
+  { 
+    label: '爬虫助手', 
+    value: 'scrapling',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="14" x="8" y="6" rx="4"/><path d="m19 7-3 2"/><path d="m5 7 3 2"/><path d="m19 19-3-2"/><path d="m5 19 3-2"/><path d="M20 13h-4"/><path d="M4 13h4"/><path d="m10 4 1 2"/><path d="m14 4-1 2"/></svg>`
+  }
 ]
 
+const currentAgentId = ref('guest-bot') 
 const currentAgentName = computed(() => {
   const agent = agentOptions.find(a => a.value === currentAgentId.value)
   return agent ? agent.label : 'AI Agent'
@@ -56,16 +76,16 @@ const getOrCreateSessionId = () => {
 }
 const sessionId = ref(getOrCreateSessionId())
 
-// 🌟 加回来的快捷语逻辑
+// 🌟 快捷语移除了自带的 Emoji，更显专业
 const quickMessages = computed(() => {
   if (currentAgentId.value === 'engineering-frontend-developer') {
-    return ['👋 Vue3 怎么学？', '💻 帮我写个轮播图', '🏗️ 评估一下这套架构']
+    return ['Vue3 怎么学？', '帮我写个轮播图', '评估一下这套架构']
   } else if (currentAgentId.value === 'design-whimsy-injector') {
-    return ['🎉 给我个彩蛋建议', '✨ 这个按钮太无聊了', '🤣 讲个极客笑话']
+    return ['给我个彩蛋建议', '这个按钮太无聊了', '讲个极客笑话']
   } else if (currentAgentId.value === 'scrapling') {
     return ['介绍下你的功能']
   } 
-  return ['👋 你是谁？', '💻 介绍下你的主人', '🏗️ 网站架构是怎么做的？']
+  return ['你是谁？', '介绍下你的主人', '网站架构是怎么做的？']
 })
 
 const sendQuickMessage = (text: string) => {
@@ -233,7 +253,9 @@ watch(() => props.show, (newVal) => {
         </div>
         
         <div class="openclaw-banner">
-          <span class="banner-icon">⚡</span> 
+          <span class="banner-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </span> 
           <span>Powered by <strong>OpenClaw</strong></span>
         </div>
 
@@ -249,14 +271,17 @@ watch(() => props.show, (newVal) => {
               :class="{ 'is-active': currentAgentId === agent.value }"
               @click="currentAgentId = agent.value"
             >
-              <div class="agent-item-text">{{ agent.label }}</div>
+              <div class="agent-item-left">
+                <span class="agent-icon" v-html="agent.icon"></span>
+                <span class="agent-item-text">{{ agent.label }}</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="sidebar-footer">
           <div class="sidebar-footer-item user-profile">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=visitor" alt="Visitor" class="sm-avatar" />
+            <img src="/user.png" alt="Visitor" class="sm-avatar" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'" />
             <span class="username">访客 (Visitor)</span>
           </div>
         </div>
@@ -273,7 +298,7 @@ watch(() => props.show, (newVal) => {
 
         <div class="chat-body" ref="chatContainerRef">
           <div v-if="messageList.length === 0" class="empty-state">
-            <div class="empty-icon">{{ currentAgentId === 'guest-bot' ? '🦞' : '🤖' }}</div>
+            <div class="empty-icon-svg" v-html="agentOptions.find(a => a.value === currentAgentId)?.icon"></div>
             <div class="empty-text">Hi，欢迎来到我的数字领地！</div>
           </div>
 
@@ -284,8 +309,8 @@ watch(() => props.show, (newVal) => {
             :class="msg.role === 'user' ? 'row-user' : 'row-ai'"
           >
             <div class="msg-avatar">
-              <img v-if="msg.role === 'user'" src="https://api.dicebear.com/7.x/avataaars/svg?seed=visitor" alt="Visitor" />
-              <img v-else src="https://api.dicebear.com/7.x/bottts/svg?seed=AI" alt="AI" />
+              <img v-if="msg.role === 'user'" src="/user.png" alt="Visitor" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'" />
+              <img v-else src="/lobster.png" alt="AI" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=AI'" />
             </div>
             
             <div class="msg-content-wrapper">
@@ -306,9 +331,15 @@ watch(() => props.show, (newVal) => {
               </div>
               
               <div class="msg-actions" v-if="msg.role === 'ai' && !isSearching && msg === messageList[messageList.length - 1]">
-                <div class="action-btn">👍</div>
-                <div class="action-btn">👎</div>
-                <div class="action-btn">📋</div>
+                <div class="action-btn" title="赞同">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                </div>
+                <div class="action-btn" title="不赞同">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+                </div>
+                <div class="action-btn" title="复制内容">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </div>
               </div>
             </div>
           </div>
@@ -324,12 +355,15 @@ watch(() => props.show, (newVal) => {
               class="quick-tag"
               @click="sendQuickMessage(msg)"
             >
-              <div class="markdown-body" v-html="renderMarkdown(msg)"></div>
+              <svg style="margin-right: 4px" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z"/></svg>
+              <span>{{ msg }}</span>
             </span>
           </div>
 
           <div class="pill-input-box">
-            <div class="pill-icon">💬</div>
+            <div class="pill-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </div>
             <n-input 
               ref="inputRef"
               v-model:value="searchQuery" 
@@ -408,7 +442,7 @@ watch(() => props.show, (newVal) => {
   margin-bottom: 32px;
   border: 1px solid #c7d2fe;
 }
-.banner-icon { font-size: 18px; }
+.banner-icon { display: flex; align-items: center; }
 
 .sidebar-section { flex: 1; overflow-y: auto; }
 .section-header {
@@ -425,7 +459,6 @@ watch(() => props.show, (newVal) => {
 .agent-item {
   padding: 10px 12px;
   border-radius: 8px;
-  font-size: 13.5px;
   color: #4b5563;
   cursor: pointer;
   display: flex;
@@ -433,13 +466,27 @@ watch(() => props.show, (newVal) => {
   align-items: center;
   transition: all 0.2s;
 }
-.agent-item:hover { background: #f9fafb; }
+.agent-item:hover { background: #f9fafb; color: #111827;}
 .agent-item.is-active {
   background: #eef2ff;
   color: #4f46e5;
   font-weight: 600;
 }
+.agent-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.agent-icon {
+  display: flex;
+  align-items: center;
+  color: inherit;
+  opacity: 0.8;
+}
+.agent-item.is-active .agent-icon { opacity: 1; }
+
 .agent-item-text {
+  font-size: 13.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -463,7 +510,7 @@ watch(() => props.show, (newVal) => {
   font-weight: 500;
   border-radius: 8px;
 }
-.sm-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #e5e7eb; }
+.sm-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #e5e7eb; object-fit: cover; }
 .username { font-weight: 600; color: #111827; }
 
 /* ================== 右侧主区域 ================== */
@@ -509,7 +556,13 @@ watch(() => props.show, (newVal) => {
   justify-content: center;
   color: #6b7280;
 }
-.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-icon-svg { 
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px; 
+  color: #9ca3af;
+}
+.empty-icon-svg :deep(svg) { width: 48px; height: 48px; stroke-width: 1.5; }
 
 .message-row {
   display: flex;
@@ -524,7 +577,7 @@ watch(() => props.show, (newVal) => {
 .row-user { flex-direction: row-reverse; }
 
 .msg-avatar { width: 36px; height: 36px; flex-shrink: 0; }
-.msg-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 1px solid #e5e7eb; background-color: #f9fafb;}
+.msg-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 1px solid #e5e7eb; background-color: #f9fafb; object-fit: cover;}
 
 .msg-content-wrapper { 
   flex: 1; 
@@ -570,7 +623,7 @@ watch(() => props.show, (newVal) => {
   gap: 12px;
   margin-top: 10px;
 }
-.action-btn { font-size: 14px; color: #9ca3af; cursor: pointer; }
+.action-btn { display: flex; align-items: center; color: #9ca3af; cursor: pointer; transition: color 0.2s;}
 .action-btn:hover { color: #4b5563; }
 
 .chat-bottom-spacer { height: 140px; }
@@ -584,11 +637,10 @@ watch(() => props.show, (newVal) => {
   padding: 0 40px 32px 40px;
   background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 20%, rgba(255,255,255,1) 100%);
   display: flex;
-  flex-direction: column; /* 🌟 保证快捷语在输入框上方对齐 */
+  flex-direction: column;
   align-items: center;
 }
 
-/* 🌟 快捷语新样式：悬浮胶囊风 */
 .quick-messages-wrapper {
   display: flex;
   gap: 8px;
@@ -605,13 +657,15 @@ watch(() => props.show, (newVal) => {
   border: 1px solid #e5e7eb;
   color: #4b5563;
   padding: 6px 14px;
-  border-radius: 999px; /* 让标签也变成圆润的胶囊 */
+  border-radius: 999px; 
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s;
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  display: flex;
+  align-items: center;
 }
 .quick-tag:hover { 
   background: #f9fafb; 
@@ -619,7 +673,6 @@ watch(() => props.show, (newVal) => {
   color: #111827; 
   transform: translateY(-1px); 
 }
-.quick-tag :deep(.markdown-body p) { margin: 0; font-size: 13px; }
 
 /* 悬浮输入框 */
 .pill-input-box {
@@ -634,7 +687,7 @@ watch(() => props.show, (newVal) => {
   gap: 12px;
 }
 
-.pill-icon { font-size: 20px; }
+.pill-icon { display: flex; align-items: center; }
 
 :deep(.seamless-input.n-input) {
   background-color: transparent;
