@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue' // 🌟 注意这里引入了 computed
+import { ref, watch, nextTick, computed } from 'vue'
 import { NModal, NInput, NSelect } from 'naive-ui'
 import { marked } from 'marked'
 import { markedHighlight } from 'marked-highlight' 
@@ -33,7 +33,7 @@ const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 // 身份配置
 const currentAgentId = ref('guest-bot') 
 const agentOptions = [
-  { label: '🦞 虾小毛 (默认接待)', value: 'guest-bot' },
+  { label: '🦞 虾小毛 (默认)', value: 'guest-bot' },
   { label: '💻 高级前端专家', value: 'engineering-frontend-developer' },
   { label: '🔥 全栈技术布道师', value: 'specialized-developer-advocate' },
   { label: '🎨 趣味交互设计', value: 'design-whimsy-injector' },
@@ -51,19 +51,6 @@ const getOrCreateSessionId = () => {
 }
 const sessionId = ref(getOrCreateSessionId())
 
-// 快捷消息
-const quickMessages = computed(() => {
-  if (currentAgentId.value === 'engineering-frontend-developer') {
-    return ['👋 Vue3 怎么学？', '💻 帮我写个轮播图', '🏗️ 评估一下这套架构']
-  } else if (currentAgentId.value === 'design-whimsy-injector') {
-    return ['🎉 给我个彩蛋建议', '✨ 这个按钮太无聊了', '🤣 讲个极客笑话']
-  } 
-  else if (currentAgentId.value === 'scrapling') {
-    return ['介绍下你的功能']
-  } 
-  return ['👋 你是谁？', '💻 介绍下你的主人', '🏗️ 网站架构是怎么做的？']
-})
-
 interface Message {
   id: number
   role: 'user' | 'ai'
@@ -71,21 +58,16 @@ interface Message {
   isError?: boolean
 }
 
-// ================== 🌟 核心破局：终极记忆管理 ==================
-
-// 1. 记忆宝库：一开始就为所有专家开辟好空间，作为【绝对的唯一数据源】
+// 记忆宝库
 const chatHistories = ref<Record<string, Message[]>>(
   Object.fromEntries(agentOptions.map(opt => [opt.value, []]))
 )
 
-// 2. 传送门：当前显示的界面直接映射到对应的宝库抽屉里，再也不需要 watch 来回搬运！
 const messageList = computed(() => chatHistories.value[currentAgentId.value] as Message[])
 
-// 3. 切换身份时，只需要做一件事：滚动到页面底部
 watch(currentAgentId, () => {
   scrollToBottom()
 })
-// =========================================================
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -95,17 +77,12 @@ const scrollToBottom = () => {
   })
 }
 
-const sendQuickMessage = (text: string) => {
-  searchQuery.value = text
-  handleCallOpenClaw()
-}
-
 const handleEnter = (e: KeyboardEvent) => {
-  if (e.isComposing || e.keyCode === 229) {
-    return
+  if (e.isComposing || e.keyCode === 229) return
+  if (!e.shiftKey) {
+    e.preventDefault() 
+    handleCallOpenClaw()
   }
-  e.preventDefault() 
-  handleCallOpenClaw()
 }
 
 const handleCallOpenClaw = async () => {
@@ -115,7 +92,6 @@ const handleCallOpenClaw = async () => {
   searchQuery.value = '' 
   isSearching.value = true
 
-  // 🌟 取出当前专家的专属数组，直接往里面写！
   const currentList = chatHistories.value[currentAgentId.value] as Message[]
 
   const historyPayload = currentList
@@ -127,7 +103,6 @@ const handleCallOpenClaw = async () => {
   
   historyPayload.push({ role: 'user', content: userText })
 
-  // 写入当前专家的记录
   currentList.push({
     id: Date.now(),
     role: 'user',
@@ -150,14 +125,12 @@ const handleCallOpenClaw = async () => {
       body: JSON.stringify({ 
         command: userText, 
         messages: historyPayload, 
-        // 🌟 正确拼接：使用了反引号 ` 
         sessionId: `${sessionId.value}_${currentAgentId.value}`,
         agentId: currentAgentId.value 
       }) 
     })
 
     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`)
-
     const reader = response.body?.getReader()
     if (!reader) throw new Error('浏览器不支持 ReadableStream')
 
@@ -178,12 +151,9 @@ const handleCallOpenClaw = async () => {
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6).trim()
             if (dataStr === '[DONE]') continue
-
             try {
               const data = JSON.parse(dataStr)
-              // 直接在专属数组里查找修改
               const currentAiMsg = currentList.find(m => m.id === aiMessageId)
-              
               if (currentAiMsg) {
                 if (data.error) {
                   currentAiMsg.content += `\n[系统提示]: ${data.error}`
@@ -220,12 +190,15 @@ watch(() => props.show, (newVal) => {
   if (newVal) {
     scrollToBottom()
     setTimeout(() => {
-      if (window.innerWidth > 768) {
-        inputRef.value?.focus()
-      }
+      if (window.innerWidth > 768) inputRef.value?.focus()
     }, 300)
   }
 })
+
+// 清空当前对话
+const clearCurrentChat = () => {
+  chatHistories.value[currentAgentId.value] = []
+}
 </script>
 
 <template>
@@ -236,414 +209,448 @@ watch(() => props.show, (newVal) => {
   >
     <div class="chat-casing">
       
-      <div class="chat-header">
-        <div class="header-left">
-          <div class="status-dot"></div>
-          <n-select
-            v-model:value="currentAgentId"
-            :options="agentOptions"
-            size="small"
-            class="agent-selector"
-            :disabled="isSearching"
-          />
+      <div class="sidebar hide-on-mobile">
+        <div class="sidebar-logo">
+          <strong>CHAT</strong> A.I+
         </div>
-        <div class="header-right">
-          <div class="tech-badge hide-on-mobile">
-            <span class="fw-bold">OpenClaw</span> 驱动
+        
+        <button class="new-chat-btn" @click="clearCurrentChat">
+          <span>+</span> New chat
+        </button>
+
+        <div class="sidebar-section">
+          <div class="section-header">
+            <span>Your Agents</span>
+            <span class="clear-all" @click="clearCurrentChat">Clear All</span>
           </div>
+          <div class="agent-list">
+            <div 
+              v-for="agent in agentOptions" 
+              :key="agent.value"
+              class="agent-item"
+              :class="{ 'is-active': currentAgentId === agent.value }"
+              @click="currentAgentId = agent.value"
+            >
+              <div class="agent-item-text">{{ agent.label }}</div>
+              <div class="agent-item-actions" v-if="currentAgentId === agent.value">
+                <span class="action-icon">🗑️</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-footer-item">
+            <span class="icon">⚙️</span> Settings
+          </div>
+          <div class="sidebar-footer-item user-profile">
+            <img src="/user.png" alt="User" class="sm-avatar" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaowei'" />
+            <span class="username">Xiaowei</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        
+        <div class="mobile-header show-on-mobile">
+          <n-select v-model:value="currentAgentId" :options="agentOptions" size="small" class="mobile-select"/>
           <div class="close-btn" @click="emit('update:show', false)">✕</div>
         </div>
-      </div>
+        
+        <div class="desktop-close-btn hide-on-mobile" @click="emit('update:show', false)">✕</div>
 
-      <div class="chat-body" ref="chatContainerRef">
-        <div v-if="messageList.length === 0" class="empty-state">
-          <div class="empty-lobster">
-            {{ currentAgentId === 'guest-bot' ? '🦞' : '🤖' }}
+        <div class="chat-body" ref="chatContainerRef">
+          <div v-if="messageList.length === 0" class="empty-state">
+            <div class="empty-icon">{{ currentAgentId === 'guest-bot' ? '🦞' : '🤖' }}</div>
+            <div class="empty-text">What can I help you with today?</div>
           </div>
-          <div class="empty-text">
-            {{ currentAgentId === 'guest-bot' ? '“找本龙虾有何贵干？”' : '“专家已就位，请描述您的问题。”' }}
-          </div>
-        </div>
 
-        <div 
-          v-for="msg in messageList" 
-          :key="msg.id"
-          class="message-wrapper"
-          :class="msg.role === 'user' ? 'is-user' : 'is-ai'"
-        >
-          <div class="avatar" :class="msg.role === 'user' ? 'avatar-user' : 'avatar-ai'">
-            <img v-if="msg.role === 'user'" src="/user.png" class="avatar-img" alt="我" />
-            <img v-else src="/lobster.png" class="avatar-img" alt="AI" />
-          </div>
-          
-          <div class="bubble" :class="{ 'error-bubble': msg.isError }">
-            <div v-if="msg.role === 'user'">{{ msg.content }}</div>
+          <div 
+            v-for="msg in messageList" 
+            :key="msg.id"
+            class="message-row"
+            :class="msg.role === 'user' ? 'row-user' : 'row-ai'"
+          >
+            <div class="msg-avatar">
+              <img v-if="msg.role === 'user'" src="/user.png" alt="Me" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaowei'" />
+              <img v-else src="/lobster.png" alt="AI" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=AI'" />
+            </div>
             
-            <div 
-              v-else 
-              class="markdown-body" 
-              v-html="renderMarkdown(msg.content)"
-            ></div>
+            <div class="msg-content-wrapper">
+              <div class="msg-author-bar">
+                <span class="author-name">{{ msg.role === 'user' ? 'Xiaowei' : 'CHAT A.I - 🤖' }}</span>
+                <span class="edit-icon" v-if="msg.role === 'user'">✎</span>
+              </div>
+              
+              <div class="msg-payload" :class="{ 'error-text': msg.isError }">
+                <div v-if="msg.role === 'user'" class="user-text">{{ msg.content }}</div>
+                
+                <div 
+                  v-else 
+                  class="markdown-body" 
+                  v-html="renderMarkdown(msg.content)"
+                ></div>
 
-            <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
+                <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
+              </div>
+              
+              <div class="msg-actions" v-if="msg.role === 'ai' && !isSearching && msg === messageList[messageList.length - 1]">
+                <div class="action-btn">👍</div>
+                <div class="action-btn">👎</div>
+                <div class="action-btn">📋</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-bottom-spacer"></div>
+        </div>
+
+        <div class="floating-input-area">
+          <div class="pill-input-box">
+            <div class="pill-icon">💬</div>
+            <n-input 
+              ref="inputRef"
+              v-model:value="searchQuery" 
+              type="textarea" 
+              placeholder="What's in your mind?..." 
+              class="seamless-input"
+              @keydown.enter="handleEnter"
+              :disabled="isSearching"
+              :autosize="{ minRows: 1, maxRows: 4 }"
+            />
+            <button 
+              class="pill-send-btn" 
+              :class="{ 'is-active': searchQuery.trim().length > 0 && !isSearching }"
+              @click="handleCallOpenClaw"
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
+            </button>
           </div>
         </div>
-      </div>
 
-      <div class="chat-footer-wrapper">
-        <div class="quick-messages" v-if="!isSearching">
-          <span 
-            v-for="(msg, idx) in quickMessages" 
-            :key="idx"
-            class="quick-tag"
-            @click="sendQuickMessage(msg)"
-          >
-            <div class="markdown-body" v-html="renderMarkdown(msg)"></div>
-          </span>
+        <div class="side-badge hide-on-mobile">
+          ✨ OpenClaw AI
         </div>
 
-        <div class="chat-footer">
-          <n-input 
-            ref="inputRef"
-            v-model:value="searchQuery" 
-            type="textarea" 
-            placeholder="输入指令..." 
-            class="chat-input"
-            @keydown.enter="handleEnter"
-            :disabled="isSearching"
-            :autosize="{ minRows: 1, maxRows: 4 }"
-          >
-            <template #suffix>
-              <div 
-                class="send-btn-icon" 
-                :class="{ 'is-active': searchQuery.trim().length > 0 && !isSearching }"
-                @click="handleCallOpenClaw"
-              >
-                ↑
-              </div>
-            </template>
-          </n-input>
-        </div>
       </div>
-      
     </div>
   </n-modal>
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* ================== 外壳：纯白专业风 ================== */
+/* ================== 基础框架 ================== */
 .chat-casing {
-  width: calc(100vw - 32px);
-  max-width: 820px;
+  width: calc(100vw - 40px);
+  max-width: 1100px;
   height: 85vh; 
   max-height: 850px;
-  background: #ffffff; /* 移除毛玻璃，使用纯白 */
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 20px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+}
+
+/* ================== 左侧边栏 ================== */
+.sidebar {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #f3f4f6;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 40px -8px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.2);
-  overflow: hidden;
-  font-family: 'Nunito', -apple-system, sans-serif;
-}
-
-/* ================== 头部 ================== */
-.chat-header {
-  height: 60px;
-  background: #ffffff;
-  border-bottom: 1px solid #f1f5f9;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
+  padding: 24px 20px;
   flex-shrink: 0;
 }
-.header-left, .header-right { display: flex; align-items: center; gap: 12px; }
 
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+.sidebar-logo {
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  margin-bottom: 30px;
+  padding-left: 8px;
 }
+.sidebar-logo strong { font-weight: 800; color: #111827; }
 
-.tech-badge {
-  font-family: 'Fira Code', monospace;
-  font-size: 13px;
-  color: #64748b;
-  padding: 4px 10px;
-  border-radius: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-.tech-badge .fw-bold { color: #334155; font-weight: 700; }
-
-.close-btn {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  color: #94a3b8;
-  cursor: pointer;
+.new-chat-btn {
+  background: #4f46e5; /* 核心主题蓝 */
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 0;
   font-size: 14px;
-  transition: all 0.2s;
-}
-.close-btn:hover { background: #f1f5f9; color: #0f172a; }
-
-/* 下拉选择器 */
-.agent-selector { width: 190px; }
-:deep(.n-base-selection) {
-  border-radius: 6px;
-  background-color: transparent !important;
-  border: 1px solid transparent !important;
-  box-shadow: none !important;
-}
-:deep(.n-base-selection:hover), :deep(.n-base-selection--active) { 
-  background-color: #f8fafc !important; 
-  border-color: #e2e8f0 !important; 
-}
-:deep(.n-base-selection .n-base-selection-label) { font-weight: 700; color: #1e293b; }
-
-/* ================== 对话区域 ================== */
-.chat-body {
-  flex: 1;
-  padding: 24px 32px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 28px; /* 增加消息间距，显得更专业不拥挤 */
-  background-color: #ffffff;
-}
-.chat-body::-webkit-scrollbar { width: 6px; }
-.chat-body::-webkit-scrollbar-track { background: transparent; }
-.chat-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-
-.empty-state {
-  margin: auto;
-  text-align: center;
-  transform: translateY(-20px);
-}
-.empty-lobster {
-  font-size: 50px;
-  margin-bottom: 12px;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
-  animation: float 3s ease-in-out infinite;
-}
-.empty-text { color: #64748b; font-size: 15px; font-weight: 600; }
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-}
-
-/* 消息包裹层 */
-.message-wrapper {
-  display: flex;
-  gap: 16px;
-  max-width: 90%;
-}
-.is-user { align-self: flex-end; flex-direction: row-reverse; }
-.is-ai { align-self: flex-start; }
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px; /* 克制的小圆角 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-}
-.avatar-img { width: 100%; height: 100%; object-fit: contain; }
-
-/* 气泡风格优化：扁平、高级灰与深色 */
-.bubble {
-  padding: 12px 16px;
-  font-size: 15px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-all;
-  border-radius: 8px; /* 统一小圆角 */
-}
-.is-user .bubble {
-  background: #0f172a; /* 高级极客黑 */
-  color: #f8fafc;
-  border-bottom-right-radius: 2px;
-}
-.is-ai .bubble {
-  background: #f8fafc; /* 清爽浅灰 */
-  color: #334155;
-  border: 1px solid #f1f5f9;
-  border-bottom-left-radius: 2px;
-}
-.error-bubble {
-  color: #b91c1c !important;
-  background: #fef2f2 !important;
-  border: 1px solid #fecaca !important;
-}
-
-.cursor {
-  display: inline-block;
-  width: 6px;
-  height: 15px;
-  background: #0f172a;
-  margin-left: 4px;
-  vertical-align: middle;
-  animation: blink 1s step-end infinite;
-}
-@keyframes blink { 50% { opacity: 0; } }
-
-/* ================== 底部输入区 ================== */
-.chat-footer-wrapper {
-  background: #ffffff;
-  border-top: 1px solid #f1f5f9;
-  display: flex;
-  flex-direction: column;
-}
-
-.quick-messages {
-  display: flex;
-  gap: 8px;
-  padding: 16px 24px 0 24px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.quick-messages::-webkit-scrollbar { display: none; }
-.quick-tag {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s;
-}
-.quick-tag:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
-.quick-tag .markdown-body p { margin: 0; font-size: 13px; }
-
-.chat-footer {
-  padding: 16px 24px 24px 24px;
-}
-
-/* 输入框定制：解决之前的奇怪外观 */
-:deep(.chat-input.n-input) {
-  border-radius: 12px;
-  background-color: #f8fafc;
-  border: 1px solid transparent;
-  transition: all 0.2s;
-  align-items: flex-end; /* 让发送按钮沉在底部 */
-}
-:deep(.chat-input.n-input:hover), :deep(.chat-input.n-input:focus-within) {
-  background-color: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-}
-:deep(.chat-input.n-input .n-input__textarea-el) {
-  font-size: 15px;
-  padding: 12px 0 12px 14px; /* 舒适的内边距 */
-  color: #1e293b;
-}
-
-/* 按钮放在 #suffix 里 */
-.send-btn-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #e2e8f0;
-  color: #94a3b8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  cursor: not-allowed;
-  transition: all 0.2s ease;
-  margin-bottom: 6px; /* 贴合底部 */
-  margin-right: 6px;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  margin-bottom: 32px;
 }
-.send-btn-icon.is-active {
-  background: #0f172a; /* 与用户气泡呼应 */
-  color: #ffffff;
-  cursor: pointer;
-}
-.send-btn-icon.is-active:hover { background: #334155; }
+.new-chat-btn:hover { background: #4338ca; transform: translateY(-1px); }
 
-/* ================== 🚀 Markdown 与代码块 (极客终端风) ================== */
-:deep(.markdown-body) {
+.sidebar-section { flex: 1; overflow-y: auto; }
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 600;
+  padding: 0 8px;
+  margin-bottom: 12px;
+}
+.clear-all { color: #4f46e5; cursor: pointer; }
+.clear-all:hover { text-decoration: underline; }
+
+.agent-list { display: flex; flex-direction: column; gap: 4px; }
+.agent-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+.agent-item:hover { background: #f9fafb; }
+.agent-item.is-active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+.agent-item-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.action-icon { font-size: 12px; opacity: 0.6; }
+
+.sidebar-footer {
+  margin-top: auto;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sidebar-footer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.sidebar-footer-item:hover { background: #f9fafb; }
+.sm-avatar { width: 24px; height: 24px; border-radius: 50%; }
+.username { font-weight: 600; color: #111827; }
+
+/* ================== 右侧主区域 ================== */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  position: relative;
+}
+
+.desktop-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 8px;
+  z-index: 10;
+}
+.desktop-close-btn:hover { background: #f3f4f6; color: #111827; }
+
+/* 对话流 */
+.chat-body {
+  flex: 1;
+  padding: 40px 60px 0 60px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.chat-body::-webkit-scrollbar { width: 6px; }
+.chat-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+
+.empty-state {
+  height: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+.message-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 36px; /* 加大间距，更像文档 */
+  max-width: 850px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.msg-avatar { width: 36px; height: 36px; flex-shrink: 0; }
+.msg-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 1px solid #e5e7eb; }
+
+.msg-content-wrapper { flex: 1; min-width: 0; }
+.msg-author-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.author-name { font-size: 13px; font-weight: 600; color: #4b5563; }
+.row-ai .author-name { color: #4f46e5; }
+.edit-icon { font-size: 12px; color: #9ca3af; cursor: pointer; }
+
+/* 核心：摒弃气泡，使用纯文本排版 */
+.msg-payload {
   font-size: 15px;
   line-height: 1.7;
-  color: #1e293b;
+  color: #1f2937;
 }
-:deep(.markdown-body p) { margin-top: 0; margin-bottom: 12px; }
-:deep(.markdown-body p:last-child) { margin-bottom: 0; }
-:deep(.markdown-body strong) { font-weight: 700; color: #0f172a; }
-
-:deep(.markdown-body code:not(pre code)) {
-  background-color: #e2e8f0;
-  color: #334155;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'Fira Code', monospace;
-  font-size: 0.85em;
+.user-text {
+  font-weight: 500;
+  white-space: pre-wrap;
 }
+.error-text { color: #dc2626; }
 
-:deep(.markdown-body pre) {
-  background-color: #1e1e1e;
-  border-radius: 8px;
-  padding: 38px 16px 16px 16px;
-  margin: 16px 0;
-  overflow-x: auto;
-  position: relative;
-  border: 1px solid #334155;
+.msg-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
 }
+.action-btn { font-size: 14px; color: #9ca3af; cursor: pointer; }
+.action-btn:hover { color: #4b5563; }
 
-:deep(.markdown-body pre::before) {
-  content: " ";
+.chat-bottom-spacer { height: 120px; /* 给底部悬浮输入框留空间 */ }
+
+/* ================== 悬浮胶囊输入框 ================== */
+.floating-input-area {
   position: absolute;
-  top: 14px;
-  left: 14px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ef4444;
-  box-shadow: 16px 0 #eab308, 32px 0 #22c55e;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 40px 32px 40px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 30%, rgba(255,255,255,1) 100%);
+  display: flex;
+  justify-content: center;
 }
 
-:deep(.markdown-body pre code) {
-  font-family: 'Fira Code', Consolas, Monaco, monospace;
-  font-size: 13.5px;
-  line-height: 1.6;
-  color: #abb2bf;
+.pill-input-box {
+  width: 100%;
+  max-width: 760px;
+  background: #ffffff;
+  border-radius: 999px; /* 完美的胶囊形状 */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  padding: 8px 12px 8px 24px;
+  gap: 12px;
 }
-:deep(.markdown-body pre::-webkit-scrollbar) { height: 8px; }
-:deep(.markdown-body pre::-webkit-scrollbar-thumb) { background-color: rgba(255, 255, 255, 0.2); border-radius: 4px; }
-:deep(.markdown-body pre::-webkit-scrollbar-track) { background: transparent; }
+
+.pill-icon { font-size: 20px; }
+
+/* 深度覆盖 Naive UI 输入框样式，使其隐形融入胶囊 */
+:deep(.seamless-input.n-input) {
+  background-color: transparent;
+  border: none !important;
+  box-shadow: none !important;
+}
+:deep(.seamless-input.n-input .n-input__textarea-el) {
+  padding: 10px 0;
+  font-size: 15px;
+  color: #1f2937;
+}
+
+.pill-send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #e5e7eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: not-allowed;
+  transition: all 0.3s;
+}
+.pill-send-btn.is-active {
+  background: #4f46e5;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+}
+.pill-send-btn.is-active:hover { background: #4338ca; transform: scale(1.05); }
+
+/* ================== 右侧装饰标签 ================== */
+.side-badge {
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #4f46e5;
+  color: white;
+  padding: 12px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  writing-mode: vertical-rl;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -4px 0 12px rgba(79, 70, 229, 0.2);
+  cursor: default;
+}
+
+/* ================== Markdown 细节 ================== */
+:deep(.markdown-body p) { margin-top: 0; margin-bottom: 12px; }
+:deep(.markdown-body ol), :deep(.markdown-body ul) { padding-left: 20px; margin-bottom: 12px; }
+:deep(.markdown-body li) { margin-bottom: 8px; }
+:deep(.markdown-body pre) {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+:deep(.markdown-body pre code) { color: #334155; font-family: monospace; font-size: 13px; }
 
 /* ================== 📱 移动端适配 ================== */
+.show-on-mobile { display: none; }
 @media (max-width: 768px) {
-  .chat-casing {
-    width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
-    border-radius: 0;
-  }
-  .chat-header { padding: 0 16px; height: 56px; }
+  .chat-casing { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; }
   .hide-on-mobile { display: none; }
-  .agent-selector { width: 140px; }
-  .chat-body { padding: 16px; gap: 24px; }
-  .message-wrapper { max-width: 95%; gap: 10px; }
-  .avatar { width: 28px; height: 28px; }
-  .bubble { padding: 10px 14px; font-size: 14px; }
-  .quick-messages { padding: 12px 16px 0 16px; }
-  .chat-footer { padding: 12px 16px calc(16px + env(safe-area-inset-bottom)) 16px; }
+  .show-on-mobile { display: flex; }
+  
+  .mobile-header {
+    height: 60px; border-bottom: 1px solid #e5e7eb;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+  }
+  .mobile-select { width: 160px; }
+  
+  .chat-body { padding: 24px 16px 0 16px; }
+  .message-row { gap: 12px; margin-bottom: 24px; }
+  .msg-avatar { width: 28px; height: 28px; }
+  
+  .floating-input-area { padding: 0 16px 20px 16px; }
+  .pill-input-box { border-radius: 20px; padding: 6px 8px 6px 16px; }
+  .pill-send-btn { width: 36px; height: 36px; }
+  .pill-send-btn svg { width: 16px; height: 16px; }
 }
 </style>
