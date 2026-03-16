@@ -40,6 +40,12 @@ const agentOptions = [
   { label: '🕷️ 爬虫助手', value: 'scrapling' }
 ]
 
+// 🌟 新增：动态获取当前 Agent 的名字，用于聊天区域展示
+const currentAgentName = computed(() => {
+  const agent = agentOptions.find(a => a.value === currentAgentId.value)
+  return agent ? agent.label : 'AI Agent'
+})
+
 // Session ID
 const getOrCreateSessionId = () => {
   let sid = sessionStorage.getItem('guest_session_id')
@@ -117,6 +123,7 @@ const handleCallOpenClaw = async () => {
     content: ''
   })
   scrollToBottom()
+  
   const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
   try {
     const response = await fetch(`${baseUrl}/api/portfolio/openclaw/send/`, { 
@@ -194,11 +201,6 @@ watch(() => props.show, (newVal) => {
     }, 300)
   }
 })
-
-// 清空当前对话
-const clearCurrentChat = () => {
-  chatHistories.value[currentAgentId.value] = []
-}
 </script>
 
 <template>
@@ -214,15 +216,15 @@ const clearCurrentChat = () => {
           <strong>CHAT</strong> A.I+
         </div>
         
-        <button class="new-chat-btn" @click="clearCurrentChat">
-          <span>+</span> New chat
-        </button>
+        <div class="openclaw-banner">
+          <span class="banner-icon">⚡</span> 
+          <span>Powered by <strong>OpenClaw</strong></span>
+        </div>
 
         <div class="sidebar-section">
           <div class="section-header">
             <span>Your Agents</span>
-            <span class="clear-all" @click="clearCurrentChat">Clear All</span>
-          </div>
+            </div>
           <div class="agent-list">
             <div 
               v-for="agent in agentOptions" 
@@ -232,20 +234,14 @@ const clearCurrentChat = () => {
               @click="currentAgentId = agent.value"
             >
               <div class="agent-item-text">{{ agent.label }}</div>
-              <div class="agent-item-actions" v-if="currentAgentId === agent.value">
-                <span class="action-icon">🗑️</span>
               </div>
-            </div>
           </div>
         </div>
 
         <div class="sidebar-footer">
-          <div class="sidebar-footer-item">
-            <span class="icon">⚙️</span> Settings
-          </div>
           <div class="sidebar-footer-item user-profile">
-            <img src="/user.png" alt="User" class="sm-avatar" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaowei'" />
-            <span class="username">Xiaowei</span>
+            <img src="/visitor.png" alt="Visitor" class="sm-avatar" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'" />
+            <span class="username">访客 (Visitor)</span>
           </div>
         </div>
       </div>
@@ -262,7 +258,7 @@ const clearCurrentChat = () => {
         <div class="chat-body" ref="chatContainerRef">
           <div v-if="messageList.length === 0" class="empty-state">
             <div class="empty-icon">{{ currentAgentId === 'guest-bot' ? '🦞' : '🤖' }}</div>
-            <div class="empty-text">What can I help you with today?</div>
+            <div class="empty-text">Hi，欢迎来到我的数字领地！</div>
           </div>
 
           <div 
@@ -272,18 +268,17 @@ const clearCurrentChat = () => {
             :class="msg.role === 'user' ? 'row-user' : 'row-ai'"
           >
             <div class="msg-avatar">
-              <img v-if="msg.role === 'user'" src="/user.png" alt="Me" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=xiaowei'" />
+              <img v-if="msg.role === 'user'" src="/visitor.png" alt="Me" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'" />
               <img v-else src="/lobster.png" alt="AI" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=AI'" />
             </div>
             
             <div class="msg-content-wrapper">
               <div class="msg-author-bar">
-                <span class="author-name">{{ msg.role === 'user' ? 'Xiaowei' : 'CHAT A.I - 🤖' }}</span>
-                <span class="edit-icon" v-if="msg.role === 'user'">✎</span>
+                <span class="author-name">{{ msg.role === 'user' ? '访客' : currentAgentName }}</span>
               </div>
               
               <div class="msg-payload" :class="{ 'error-text': msg.isError }">
-                <div v-if="msg.role === 'user'" class="user-text">{{ msg.content }}</div>
+                <div v-if="msg.role === 'user'" class="user-bubble">{{ msg.content }}</div>
                 
                 <div 
                   v-else 
@@ -368,29 +363,25 @@ const clearCurrentChat = () => {
 .sidebar-logo {
   font-size: 20px;
   letter-spacing: 0.5px;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
   padding-left: 8px;
 }
 .sidebar-logo strong { font-weight: 800; color: #111827; }
 
-.new-chat-btn {
-  background: #4f46e5; /* 核心主题蓝 */
-  color: white;
-  border: none;
-  border-radius: 999px;
-  padding: 12px 0;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+/* 🌟 OpenClaw 静态徽标，替代了原来的 New Chat */
+.openclaw-banner {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  color: #4338ca;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13.5px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  gap: 10px;
   margin-bottom: 32px;
+  border: 1px solid #c7d2fe;
 }
-.new-chat-btn:hover { background: #4338ca; transform: translateY(-1px); }
+.banner-icon { font-size: 18px; }
 
 .sidebar-section { flex: 1; overflow-y: auto; }
 .section-header {
@@ -402,8 +393,6 @@ const clearCurrentChat = () => {
   padding: 0 8px;
   margin-bottom: 12px;
 }
-.clear-all { color: #4f46e5; cursor: pointer; }
-.clear-all:hover { text-decoration: underline; }
 
 .agent-list { display: flex; flex-direction: column; gap: 4px; }
 .agent-item {
@@ -428,7 +417,6 @@ const clearCurrentChat = () => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.action-icon { font-size: 12px; opacity: 0.6; }
 
 .sidebar-footer {
   margin-top: auto;
@@ -446,11 +434,9 @@ const clearCurrentChat = () => {
   font-size: 14px;
   color: #4b5563;
   font-weight: 500;
-  cursor: pointer;
   border-radius: 8px;
 }
-.sidebar-footer-item:hover { background: #f9fafb; }
-.sm-avatar { width: 24px; height: 24px; border-radius: 50%; }
+.sm-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #e5e7eb; }
 .username { font-weight: 600; color: #111827; }
 
 /* ================== 右侧主区域 ================== */
@@ -500,47 +486,73 @@ const clearCurrentChat = () => {
 
 .message-row {
   display: flex;
-  gap: 20px;
-  margin-bottom: 36px; /* 加大间距，更像文档 */
+  gap: 16px;
+  margin-bottom: 32px; 
   max-width: 850px;
   margin-left: auto;
   margin-right: auto;
 }
+
+/* 🌟 核心排版：区分访客和机器人的左右布局 */
+.row-ai { flex-direction: row; }
+.row-user { flex-direction: row-reverse; }
+
 .msg-avatar { width: 36px; height: 36px; flex-shrink: 0; }
 .msg-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 1px solid #e5e7eb; }
 
-.msg-content-wrapper { flex: 1; min-width: 0; }
+/* 控制内容区的对齐方向 */
+.msg-content-wrapper { 
+  flex: 1; 
+  min-width: 0; 
+  display: flex;
+  flex-direction: column;
+}
+.row-ai .msg-content-wrapper { align-items: flex-start; }
+.row-user .msg-content-wrapper { align-items: flex-end; }
+
+/* 姓名条的对齐 */
 .msg-author-bar {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
+.row-user .msg-author-bar { flex-direction: row-reverse; }
+
 .author-name { font-size: 13px; font-weight: 600; color: #4b5563; }
 .row-ai .author-name { color: #4f46e5; }
-.edit-icon { font-size: 12px; color: #9ca3af; cursor: pointer; }
 
-/* 核心：摒弃气泡，使用纯文本排版 */
+/* 消息内容区 */
 .msg-payload {
   font-size: 15px;
   line-height: 1.7;
   color: #1f2937;
-}
-.user-text {
-  font-weight: 500;
-  white-space: pre-wrap;
+  max-width: 90%; /* 防止文字过长贴边 */
 }
 .error-text { color: #dc2626; }
 
+/* 🌟 访客气泡：右侧，带底色 */
+.user-bubble {
+  background: #f3f4f6;
+  color: #111827;
+  padding: 12px 18px;
+  border-radius: 14px 4px 14px 14px;
+  display: inline-block;
+  white-space: pre-wrap;
+  word-break: break-all;
+  text-align: left; /* 保证哪怕在右边，气泡内的多行文字依然是左对齐的 */
+}
+
+/* 底部操作区对齐 */
 .msg-actions {
   display: flex;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 .action-btn { font-size: 14px; color: #9ca3af; cursor: pointer; }
 .action-btn:hover { color: #4b5563; }
 
-.chat-bottom-spacer { height: 120px; /* 给底部悬浮输入框留空间 */ }
+.chat-bottom-spacer { height: 120px; }
 
 /* ================== 悬浮胶囊输入框 ================== */
 .floating-input-area {
@@ -558,7 +570,7 @@ const clearCurrentChat = () => {
   width: 100%;
   max-width: 760px;
   background: #ffffff;
-  border-radius: 999px; /* 完美的胶囊形状 */
+  border-radius: 999px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
@@ -568,7 +580,6 @@ const clearCurrentChat = () => {
 
 .pill-icon { font-size: 20px; }
 
-/* 深度覆盖 Naive UI 输入框样式，使其隐形融入胶囊 */
 :deep(.seamless-input.n-input) {
   background-color: transparent;
   border: none !important;
