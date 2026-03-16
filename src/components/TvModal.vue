@@ -30,7 +30,7 @@ const isSearching = ref(false)
 const chatContainerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 
-// 🌟 纯净版：移除了 Emoji，换成了内置的 SVG 图标字符串
+// 🌟 纯净版 SVG 图标
 const agentOptions = [
   { 
     label: '虾小毛 (默认)', 
@@ -76,7 +76,7 @@ const getOrCreateSessionId = () => {
 }
 const sessionId = ref(getOrCreateSessionId())
 
-// 🌟 快捷语移除了自带的 Emoji，更显专业
+// 🌟 快捷语移除了自带的 Emoji
 const quickMessages = computed(() => {
   if (currentAgentId.value === 'engineering-frontend-developer') {
     return ['Vue3 怎么学？', '帮我写个轮播图', '评估一下这套架构']
@@ -327,7 +327,10 @@ watch(() => props.show, (newVal) => {
                   v-html="renderMarkdown(msg.content)"
                 ></div>
 
-                <span v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" class="cursor"></span>
+                <span 
+                  v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" 
+                  class="ai-cursor"
+                ></span>
               </div>
               
               <div class="msg-actions" v-if="msg.role === 'ai' && !isSearching && msg === messageList[messageList.length - 1]">
@@ -384,11 +387,7 @@ watch(() => props.show, (newVal) => {
           </div>
         </div>
 
-        <div class="side-badge hide-on-mobile">
-          ✨ OpenClaw AI
         </div>
-
-      </div>
     </div>
   </n-modal>
 </template>
@@ -626,6 +625,21 @@ watch(() => props.show, (newVal) => {
 .action-btn { display: flex; align-items: center; color: #9ca3af; cursor: pointer; transition: color 0.2s;}
 .action-btn:hover { color: #4b5563; }
 
+/* 🌟 NEW: 光标样式和动画 */
+.ai-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.2em;
+  background-color: #4f46e5; /* 使用主题紫色 */
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
 .chat-bottom-spacer { height: 140px; }
 
 /* ================== 悬浮胶囊输入框与快捷语 ================== */
@@ -720,36 +734,6 @@ watch(() => props.show, (newVal) => {
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
 }
 .pill-send-btn.is-active:hover { background: #4338ca; transform: scale(1.05); }
-
-/* ================== 右侧装饰标签 ================== */
-.side-badge {
-  position: absolute;
-  right: -1px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #4f46e5;
-  color: white;
-  padding: 12px 6px;
-  font-size: 12px;
-  font-weight: 600;
-  writing-mode: vertical-rl;
-  border-radius: 8px 0 0 8px;
-  box-shadow: -4px 0 12px rgba(79, 70, 229, 0.2);
-  cursor: default;
-}
-
-/* ================== Markdown 细节 ================== */
-:deep(.markdown-body p) { margin-top: 0; margin-bottom: 12px; }
-:deep(.markdown-body ol), :deep(.markdown-body ul) { padding-left: 20px; margin-bottom: 12px; }
-:deep(.markdown-body li) { margin-bottom: 8px; }
-:deep(.markdown-body pre) {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 16px;
-  overflow-x: auto;
-}
-:deep(.markdown-body pre code) { color: #334155; font-family: monospace; font-size: 13px; }
 
 /* ================== 📱 移动端适配 ================== */
 .show-on-mobile { display: none; }
