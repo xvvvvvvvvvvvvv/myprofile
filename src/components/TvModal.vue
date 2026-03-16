@@ -40,7 +40,6 @@ const agentOptions = [
   { label: '🕷️ 爬虫助手', value: 'scrapling' }
 ]
 
-// 🌟 新增：动态获取当前 Agent 的名字，用于聊天区域展示
 const currentAgentName = computed(() => {
   const agent = agentOptions.find(a => a.value === currentAgentId.value)
   return agent ? agent.label : 'AI Agent'
@@ -56,6 +55,23 @@ const getOrCreateSessionId = () => {
   return sid
 }
 const sessionId = ref(getOrCreateSessionId())
+
+// 🌟 加回来的快捷语逻辑
+const quickMessages = computed(() => {
+  if (currentAgentId.value === 'engineering-frontend-developer') {
+    return ['👋 Vue3 怎么学？', '💻 帮我写个轮播图', '🏗️ 评估一下这套架构']
+  } else if (currentAgentId.value === 'design-whimsy-injector') {
+    return ['🎉 给我个彩蛋建议', '✨ 这个按钮太无聊了', '🤣 讲个极客笑话']
+  } else if (currentAgentId.value === 'scrapling') {
+    return ['介绍下你的功能']
+  } 
+  return ['👋 你是谁？', '💻 介绍下你的主人', '🏗️ 网站架构是怎么做的？']
+})
+
+const sendQuickMessage = (text: string) => {
+  searchQuery.value = text
+  handleCallOpenClaw()
+}
 
 interface Message {
   id: number
@@ -224,7 +240,7 @@ watch(() => props.show, (newVal) => {
         <div class="sidebar-section">
           <div class="section-header">
             <span>Your Agents</span>
-            </div>
+          </div>
           <div class="agent-list">
             <div 
               v-for="agent in agentOptions" 
@@ -234,13 +250,13 @@ watch(() => props.show, (newVal) => {
               @click="currentAgentId = agent.value"
             >
               <div class="agent-item-text">{{ agent.label }}</div>
-              </div>
+            </div>
           </div>
         </div>
 
         <div class="sidebar-footer">
           <div class="sidebar-footer-item user-profile">
-            <img src="/visitor.png" alt="Visitor" class="sm-avatar" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'" />
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=visitor" alt="Visitor" class="sm-avatar" />
             <span class="username">访客 (Visitor)</span>
           </div>
         </div>
@@ -268,8 +284,8 @@ watch(() => props.show, (newVal) => {
             :class="msg.role === 'user' ? 'row-user' : 'row-ai'"
           >
             <div class="msg-avatar">
-              <img v-if="msg.role === 'user'" src="/visitor.png" alt="Me" onerror="this.src='https://api.dicebear.com/7.x/avataaars/svg?seed=visitor'" />
-              <img v-else src="/lobster.png" alt="AI" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=AI'" />
+              <img v-if="msg.role === 'user'" src="https://api.dicebear.com/7.x/avataaars/svg?seed=visitor" alt="Visitor" />
+              <img v-else src="https://api.dicebear.com/7.x/bottts/svg?seed=AI" alt="AI" />
             </div>
             
             <div class="msg-content-wrapper">
@@ -300,6 +316,18 @@ watch(() => props.show, (newVal) => {
         </div>
 
         <div class="floating-input-area">
+          
+          <div class="quick-messages-wrapper" v-if="!isSearching">
+            <span 
+              v-for="(msg, idx) in quickMessages" 
+              :key="idx"
+              class="quick-tag"
+              @click="sendQuickMessage(msg)"
+            >
+              <div class="markdown-body" v-html="renderMarkdown(msg)"></div>
+            </span>
+          </div>
+
           <div class="pill-input-box">
             <div class="pill-icon">💬</div>
             <n-input 
@@ -368,7 +396,6 @@ watch(() => props.show, (newVal) => {
 }
 .sidebar-logo strong { font-weight: 800; color: #111827; }
 
-/* 🌟 OpenClaw 静态徽标，替代了原来的 New Chat */
 .openclaw-banner {
   background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
   color: #4338ca;
@@ -493,14 +520,12 @@ watch(() => props.show, (newVal) => {
   margin-right: auto;
 }
 
-/* 🌟 核心排版：区分访客和机器人的左右布局 */
 .row-ai { flex-direction: row; }
 .row-user { flex-direction: row-reverse; }
 
 .msg-avatar { width: 36px; height: 36px; flex-shrink: 0; }
-.msg-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 1px solid #e5e7eb; }
+.msg-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 1px solid #e5e7eb; background-color: #f9fafb;}
 
-/* 控制内容区的对齐方向 */
 .msg-content-wrapper { 
   flex: 1; 
   min-width: 0; 
@@ -510,7 +535,6 @@ watch(() => props.show, (newVal) => {
 .row-ai .msg-content-wrapper { align-items: flex-start; }
 .row-user .msg-content-wrapper { align-items: flex-end; }
 
-/* 姓名条的对齐 */
 .msg-author-bar {
   display: flex;
   align-items: center;
@@ -522,16 +546,14 @@ watch(() => props.show, (newVal) => {
 .author-name { font-size: 13px; font-weight: 600; color: #4b5563; }
 .row-ai .author-name { color: #4f46e5; }
 
-/* 消息内容区 */
 .msg-payload {
   font-size: 15px;
   line-height: 1.7;
   color: #1f2937;
-  max-width: 90%; /* 防止文字过长贴边 */
+  max-width: 90%; 
 }
 .error-text { color: #dc2626; }
 
-/* 🌟 访客气泡：右侧，带底色 */
 .user-bubble {
   background: #f3f4f6;
   color: #111827;
@@ -540,10 +562,9 @@ watch(() => props.show, (newVal) => {
   display: inline-block;
   white-space: pre-wrap;
   word-break: break-all;
-  text-align: left; /* 保证哪怕在右边，气泡内的多行文字依然是左对齐的 */
+  text-align: left;
 }
 
-/* 底部操作区对齐 */
 .msg-actions {
   display: flex;
   gap: 12px;
@@ -552,20 +573,55 @@ watch(() => props.show, (newVal) => {
 .action-btn { font-size: 14px; color: #9ca3af; cursor: pointer; }
 .action-btn:hover { color: #4b5563; }
 
-.chat-bottom-spacer { height: 120px; }
+.chat-bottom-spacer { height: 140px; }
 
-/* ================== 悬浮胶囊输入框 ================== */
+/* ================== 悬浮胶囊输入框与快捷语 ================== */
 .floating-input-area {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   padding: 0 40px 32px 40px;
-  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 30%, rgba(255,255,255,1) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 20%, rgba(255,255,255,1) 100%);
   display: flex;
-  justify-content: center;
+  flex-direction: column; /* 🌟 保证快捷语在输入框上方对齐 */
+  align-items: center;
 }
 
+/* 🌟 快捷语新样式：悬浮胶囊风 */
+.quick-messages-wrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 760px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.quick-messages-wrapper::-webkit-scrollbar { display: none; }
+
+.quick-tag {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+  padding: 6px 14px;
+  border-radius: 999px; /* 让标签也变成圆润的胶囊 */
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.quick-tag:hover { 
+  background: #f9fafb; 
+  border-color: #d1d5db; 
+  color: #111827; 
+  transform: translateY(-1px); 
+}
+.quick-tag :deep(.markdown-body p) { margin: 0; font-size: 13px; }
+
+/* 悬浮输入框 */
 .pill-input-box {
   width: 100%;
   max-width: 760px;
