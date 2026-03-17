@@ -818,14 +818,19 @@ watch(() => props.show, (newVal) => {
   margin-bottom: 0;
 }
 
-/* 核心修复：代码块横向滚动，绝对不撑爆父容器 */
+/* 🌟 核心修复：添加 color: #abb2bf 解决黑底黑字隐身问题 */
 .markdown-body :deep(pre) {
-  max-width: 100%; /* 🌟 保证代码块的宽度最大就是气泡的宽度 */
-  overflow-x: auto; /* 超出宽度出现横向滚动条 */
+  max-width: 100%;
+  overflow-x: auto;
   background-color: #282c34;
+  color: #abb2bf; /* <-- 就是这行救命代码，浅灰色文字 */
   padding: 12px;
   border-radius: 8px;
   margin: 12px 0;
+}
+
+.markdown-body :deep(pre code) {
+  color: inherit; /* 确保普通代码块继承浅色文字 */
 }
 
 .markdown-body :deep(code) {
@@ -833,6 +838,7 @@ watch(() => props.show, (newVal) => {
   font-size: 13.5px;
 }
 
+/* 浅色的内联代码块 */
 .markdown-body :deep(:not(pre) > code) {
   background-color: #f3f4f6;
   color: #eb5757;
@@ -840,6 +846,16 @@ watch(() => props.show, (newVal) => {
   border-radius: 4px;
   word-break: break-word;
   white-space: pre-wrap;
+}
+
+/* 🌟 顺手把引用的样式也美化了，极客范儿 */
+.markdown-body :deep(blockquote) {
+  border-left: 4px solid #4f46e5;
+  margin: 12px 0;
+  padding: 8px 12px;
+  color: #6b7280;
+  background-color: #f8fafc;
+  border-radius: 0 8px 8px 0;
 }
 
 .markdown-body :deep(img) {
