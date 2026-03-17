@@ -26,9 +26,16 @@ const props = defineProps<{ show: boolean }>()
 const emit = defineEmits<{ (e: 'update:show', val: boolean): void }>()
 
 const searchQuery = ref('')
-const isSearching = ref(false)
 const chatContainerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof NInput> | null>(null)
+
+// 🌟 核心改造 1：将全局布尔值替换为对象，记录每个 Agent 的请求状态
+const searchingStates = ref<Record<string, boolean>>({})
+
+// 🌟 核心改造 2：动态计算当前所在的 Agent 是否正在请求
+const isCurrentAgentSearching = computed(() => {
+  return !!searchingStates.value[currentAgentId.value]
+})
 
 // 🌟 纯净版 SVG 图标
 const agentOptions = [
@@ -76,7 +83,6 @@ const getOrCreateSessionId = () => {
 }
 const sessionId = ref(getOrCreateSessionId())
 
-// 🌟 增加了全栈技术布道师的快捷语
 const quickMessages = computed(() => {
   if (currentAgentId.value === 'engineering-frontend-developer') {
     return ['Vue3 怎么学？', '帮我写个轮播图', '评估一下这套架构']
@@ -102,7 +108,6 @@ interface Message {
   isError?: boolean
 }
 
-// 🌟 记忆宝库：为爬虫助手初始化首条消息
 const chatHistories = ref<Record<string, Message[]>>(
   Object.fromEntries(agentOptions.map(opt => {
     if (opt.value === 'scrapling') {
@@ -139,13 +144,17 @@ const handleEnter = (e: KeyboardEvent) => {
 }
 
 const handleCallOpenClaw = async () => {
-  if (!searchQuery.value.trim() || isSearching.value) return
+  // 🌟 修改：防抖检查现在针对的是当前特定的 Agent
+  if (!searchQuery.value.trim() || isCurrentAgentSearching.value) return
   
   const userText = searchQuery.value
   searchQuery.value = '' 
-  isSearching.value = true
+  
+  // 🌟 核心改造 3：锁定此次请求对应的专属 Agent ID
+  const requestAgentId = currentAgentId.value
+  searchingStates.value[requestAgentId] = true
 
-  const currentList = chatHistories.value[currentAgentId.value] as Message[]
+  const currentList = chatHistories.value[requestAgentId] as Message[]
 
   const historyPayload = currentList
     .filter(m => !m.isError && m.content) 
@@ -179,8 +188,8 @@ const handleCallOpenClaw = async () => {
       body: JSON.stringify({ 
         command: userText, 
         messages: historyPayload, 
-        sessionId: `${sessionId.value}_${currentAgentId.value}`,
-        agentId: currentAgentId.value 
+        sessionId: `${sessionId.value}_${requestAgentId}`, // 确保传给后端的是发出请求时的 AgentId
+        agentId: requestAgentId 
       }) 
     })
 
@@ -215,7 +224,10 @@ const handleCallOpenClaw = async () => {
                 } else if (data.choices && data.choices[0].delta) {
                   currentAiMsg.content += data.choices[0].delta.content || ''
                 }
-                scrollToBottom()
+                // 只有当前正在看着这个请求的 Agent 时，才滚动到底部
+                if (currentAgentId.value === requestAgentId) {
+                  scrollToBottom()
+                }
               }
             } catch (e) {
               console.warn('JSON 解析分块跳过:', dataStr)
@@ -231,9 +243,11 @@ const handleCallOpenClaw = async () => {
       currentAiMsg.isError = true
     }
   } finally {
-    isSearching.value = false
+    // 🌟 核心改造 4：请求结束，只释放对应的 Agent
+    searchingStates.value[requestAgentId] = false
     nextTick(() => {
-      if (window.innerWidth > 768) {
+      // 只有用户没有切走，依然停留在发请求的那个页面时，才自动聚焦输入框
+      if (window.innerWidth > 768 && currentAgentId.value === requestAgentId) {
         inputRef.value?.focus()
       }
     })
@@ -286,6 +300,10 @@ watch(() => props.show, (newVal) => {
                 <span class="agent-icon" v-html="agent.icon"></span>
                 <span class="agent-item-text">{{ agent.label }}</span>
               </div>
+              
+              <span v-if="searchingStates[agent.value]" class="agent-loading">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              </span>
             </div>
           </div>
         </div>
@@ -339,12 +357,12 @@ watch(() => props.show, (newVal) => {
                 ></div>
 
                 <span 
-                  v-if="msg.role === 'ai' && isSearching && msg === messageList[messageList.length - 1]" 
+                  v-if="msg.role === 'ai' && isCurrentAgentSearching && msg === messageList[messageList.length - 1]" 
                   class="ai-cursor"
                 ></span>
               </div>
               
-              <div class="msg-actions" v-if="msg.role === 'ai' && !isSearching && msg === messageList[messageList.length - 1]">
+              <div class="msg-actions" v-if="msg.role === 'ai' && !isCurrentAgentSearching && msg === messageList[messageList.length - 1]">
                 <div class="action-btn" title="赞同">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
                 </div>
@@ -362,7 +380,7 @@ watch(() => props.show, (newVal) => {
 
         <div class="floating-input-area">
           
-          <div class="quick-messages-wrapper" v-if="!isSearching">
+          <div class="quick-messages-wrapper" v-if="!isCurrentAgentSearching">
             <span 
               v-for="(msg, idx) in quickMessages" 
               :key="idx"
@@ -385,12 +403,12 @@ watch(() => props.show, (newVal) => {
               placeholder="What's in your mind?..." 
               class="seamless-input"
               @keydown.enter="handleEnter"
-              :disabled="isSearching"
+              :disabled="isCurrentAgentSearching"
               :autosize="{ minRows: 1, maxRows: 4 }"
             />
             <button 
               class="pill-send-btn" 
-              :class="{ 'is-active': searchQuery.trim().length > 0 && !isSearching }"
+              :class="{ 'is-active': searchQuery.trim().length > 0 && !isCurrentAgentSearching }"
               @click="handleCallOpenClaw"
             >
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
@@ -500,6 +518,18 @@ watch(() => props.show, (newVal) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 小小的 Loading 动画 CSS */
+.agent-loading {
+  display: flex;
+  align-items: center;
+}
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% { transform: rotate(360deg); }
 }
 
 .sidebar-footer {
