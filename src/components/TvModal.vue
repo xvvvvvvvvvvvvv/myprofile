@@ -109,7 +109,7 @@ const chatHistories = ref<Record<string, Message[]>>(
       return [opt.value, [{
         id: Date.now(),
         role: 'ai',
-        content: '我是爬虫助手，您只需要提供网站链接给我，我就能将这网页的信息提取出来给您 然后提供格式'
+        content: '您好！我是您的专属**数据爬虫助手**，专注于网页内容的智能解析与结构化提取。\n\n请向我发送**目标网页链接（URL）**，并附上您的具体提取规则。例如：\n- *“提取当前页面的所有文章标题和发布时间”*\n- *“解析页面中的表格，并以 JSON 格式输出”*\n\n请发送目标链接，我们随时开始。'
       }]]
     }
     return [opt.value, []]
