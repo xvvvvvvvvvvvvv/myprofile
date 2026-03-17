@@ -76,10 +76,12 @@ const getOrCreateSessionId = () => {
 }
 const sessionId = ref(getOrCreateSessionId())
 
-// 🌟 快捷语移除了自带的 Emoji
+// 🌟 增加了全栈技术布道师的快捷语
 const quickMessages = computed(() => {
   if (currentAgentId.value === 'engineering-frontend-developer') {
     return ['Vue3 怎么学？', '帮我写个轮播图', '评估一下这套架构']
+  } else if (currentAgentId.value === 'specialized-developer-advocate') {
+    return ['如何设计高可用架构？', '讲讲微服务最佳实践', '数据库性能怎么优化？']
   } else if (currentAgentId.value === 'design-whimsy-injector') {
     return ['给我个彩蛋建议', '这个按钮太无聊了', '讲个极客笑话']
   } else if (currentAgentId.value === 'scrapling') {
@@ -100,9 +102,18 @@ interface Message {
   isError?: boolean
 }
 
-// 记忆宝库
+// 🌟 记忆宝库：为爬虫助手初始化首条消息
 const chatHistories = ref<Record<string, Message[]>>(
-  Object.fromEntries(agentOptions.map(opt => [opt.value, []]))
+  Object.fromEntries(agentOptions.map(opt => {
+    if (opt.value === 'scrapling') {
+      return [opt.value, [{
+        id: Date.now(),
+        role: 'ai',
+        content: '我是爬虫助手，您只需要提供网站链接给我，我就能将这网页的信息提取出来给您 然后提供格式'
+      }]]
+    }
+    return [opt.value, []]
+  }))
 )
 
 const messageList = computed(() => chatHistories.value[currentAgentId.value] as Message[])
