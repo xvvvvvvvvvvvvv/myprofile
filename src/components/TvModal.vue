@@ -776,6 +776,71 @@ watch(() => props.show, (newVal) => {
 }
 .pill-send-btn.is-active:hover { background: #4338ca; transform: scale(1.05); }
 
+/* ================== 🌟 修复 Markdown 内容溢出与样式穿透 ================== */
+.markdown-body {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word; /* 强制长英文或链接换行 */
+}
+
+/* 必须使用 :deep() 才能对 v-html 生成的元素生效 */
+.markdown-body :deep(p) {
+  margin-top: 0;
+  margin-bottom: 0.8em;
+  line-height: 1.6;
+}
+
+.markdown-body :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* 核心修复：代码块横向滚动，绝对不撑爆父容器 */
+.markdown-body :deep(pre) {
+  max-width: 100%;
+  overflow-x: auto; /* 超出宽度出现滚动条 */
+  background-color: #282c34; /* 匹配你引入的 atom-one-dark 主题底色 */
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.markdown-body :deep(code) {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 13.5px;
+}
+
+/* 让内联代码也有背景色 */
+.markdown-body :deep(:not(pre) > code) {
+  background-color: #f3f4f6;
+  color: #eb5757;
+  padding: 2px 4px;
+  border-radius: 4px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+/* 确保图片和表格也不会溢出 */
+.markdown-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.markdown-body :deep(table) {
+  display: block;
+  width: 100%;
+  overflow-x: auto; /* 表格太宽也允许内部滑动 */
+  border-collapse: collapse;
+}
+
+.markdown-body :deep(table th),
+.markdown-body :deep(table td) {
+  border: 1px solid #e5e7eb;
+  padding: 6px 12px;
+}
+
 /* ================== 📱 移动端适配 ================== */
 .show-on-mobile { display: none; }
 @media (max-width: 768px) {
