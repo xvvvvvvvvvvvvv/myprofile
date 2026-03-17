@@ -29,10 +29,10 @@ const searchQuery = ref('')
 const chatContainerRef = ref<HTMLElement | null>(null)
 const inputRef = ref<InstanceType<typeof NInput> | null>(null)
 
-// 🌟 核心改造 1：将全局布尔值替换为对象，记录每个 Agent 的请求状态
+// 🌟 将全局布尔值替换为对象，记录每个 Agent 的请求状态
 const searchingStates = ref<Record<string, boolean>>({})
 
-// 🌟 核心改造 2：动态计算当前所在的 Agent 是否正在请求
+// 🌟 动态计算当前所在的 Agent 是否正在请求
 const isCurrentAgentSearching = computed(() => {
   return !!searchingStates.value[currentAgentId.value]
 })
@@ -144,13 +144,12 @@ const handleEnter = (e: KeyboardEvent) => {
 }
 
 const handleCallOpenClaw = async () => {
-  // 🌟 修改：防抖检查现在针对的是当前特定的 Agent
   if (!searchQuery.value.trim() || isCurrentAgentSearching.value) return
   
   const userText = searchQuery.value
   searchQuery.value = '' 
   
-  // 🌟 核心改造 3：锁定此次请求对应的专属 Agent ID
+  // 锁定此次请求对应的专属 Agent ID
   const requestAgentId = currentAgentId.value
   searchingStates.value[requestAgentId] = true
 
@@ -188,7 +187,7 @@ const handleCallOpenClaw = async () => {
       body: JSON.stringify({ 
         command: userText, 
         messages: historyPayload, 
-        sessionId: `${sessionId.value}_${requestAgentId}`, // 确保传给后端的是发出请求时的 AgentId
+        sessionId: `${sessionId.value}_${requestAgentId}`, 
         agentId: requestAgentId 
       }) 
     })
@@ -224,7 +223,6 @@ const handleCallOpenClaw = async () => {
                 } else if (data.choices && data.choices[0].delta) {
                   currentAiMsg.content += data.choices[0].delta.content || ''
                 }
-                // 只有当前正在看着这个请求的 Agent 时，才滚动到底部
                 if (currentAgentId.value === requestAgentId) {
                   scrollToBottom()
                 }
@@ -243,10 +241,9 @@ const handleCallOpenClaw = async () => {
       currentAiMsg.isError = true
     }
   } finally {
-    // 🌟 核心改造 4：请求结束，只释放对应的 Agent
+    // 请求结束，只释放对应的 Agent
     searchingStates.value[requestAgentId] = false
     nextTick(() => {
-      // 只有用户没有切走，依然停留在发请求的那个页面时，才自动聚焦输入框
       if (window.innerWidth > 768 && currentAgentId.value === requestAgentId) {
         inputRef.value?.focus()
       }
@@ -427,9 +424,9 @@ watch(() => props.show, (newVal) => {
 /* ================== 基础框架 ================== */
 .chat-casing {
   width: calc(100vw - 40px);
-  max-width: 1100px;
-  height: 85vh; 
-  max-height: 850px;
+  max-width: 1280px; /* 🌟 窗口变大：最大宽度从 1100px 扩大到 1280px */
+  height: 90vh;      /* 🌟 窗口变高：高度从 85vh 扩大到 90vh */
+  max-height: 920px; /* 🌟 窗口变高：最大高度从 850px 扩大到 920px */
   background: #ffffff;
   border-radius: 20px;
   display: flex;
@@ -560,6 +557,7 @@ watch(() => props.show, (newVal) => {
   flex-direction: column;
   background: #ffffff;
   position: relative;
+  min-width: 0; /* 🌟 核心修复：防止被内部过宽的代码块撑大导致溢出漂移 */
 }
 
 .desktop-close-btn {
@@ -608,9 +606,11 @@ watch(() => props.show, (newVal) => {
   display: flex;
   gap: 16px;
   margin-bottom: 32px; 
-  max-width: 850px;
+  width: 100%; /* 🌟 核心修复：锁死宽度占满剩余空间 */
+  max-width: 950px; /* 🌟 尺寸变大：跟随主窗体变大，从 850px 扩大到 950px */
   margin-left: auto;
   margin-right: auto;
+  box-sizing: border-box; /* 🌟 核心修复：确保内边距不影响总宽 */
 }
 
 .row-ai { flex-direction: row; }
@@ -621,7 +621,7 @@ watch(() => props.show, (newVal) => {
 
 .msg-content-wrapper { 
   flex: 1; 
-  min-width: 0; 
+  min-width: 0; /* 🌟 核心修复：这是 Flex 布局中防止子元素撑爆的关键 */
   display: flex;
   flex-direction: column;
 }
@@ -643,7 +643,8 @@ watch(() => props.show, (newVal) => {
   font-size: 15px;
   line-height: 1.7;
   color: #1f2937;
-  max-width: 90%; 
+  max-width: 100%; /* 🌟 核心修复：从 90% 改为 100% 避免右对齐计算错位 */
+  min-width: 0; /* 🌟 核心修复：防止内容反向撑爆气泡 */
 }
 .error-text { color: #dc2626; }
 
@@ -666,12 +667,11 @@ watch(() => props.show, (newVal) => {
 .action-btn { display: flex; align-items: center; color: #9ca3af; cursor: pointer; transition: color 0.2s;}
 .action-btn:hover { color: #4b5563; }
 
-/* 🌟 NEW: 光标样式和动画 */
 .ai-cursor {
   display: inline-block;
   width: 8px;
   height: 1.2em;
-  background-color: #4f46e5; /* 使用主题紫色 */
+  background-color: #4f46e5;
   margin-left: 2px;
   vertical-align: text-bottom;
   animation: blink 1s step-end infinite;
@@ -701,7 +701,7 @@ watch(() => props.show, (newVal) => {
   gap: 8px;
   margin-bottom: 12px;
   width: 100%;
-  max-width: 760px;
+  max-width: 850px; /* 🌟 尺寸变大：从 760px 扩大到 850px */
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -732,7 +732,7 @@ watch(() => props.show, (newVal) => {
 /* 悬浮输入框 */
 .pill-input-box {
   width: 100%;
-  max-width: 760px;
+  max-width: 850px; /* 🌟 尺寸变大：从 760px 扩大到 850px */
   background: #ffffff;
   border-radius: 999px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.2);
@@ -776,71 +776,6 @@ watch(() => props.show, (newVal) => {
 }
 .pill-send-btn.is-active:hover { background: #4338ca; transform: scale(1.05); }
 
-/* ================== 🌟 修复 Markdown 内容溢出与样式穿透 ================== */
-.markdown-body {
-  width: 100%;
-  max-width: 100%;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  word-break: break-word; /* 强制长英文或链接换行 */
-}
-
-/* 必须使用 :deep() 才能对 v-html 生成的元素生效 */
-.markdown-body :deep(p) {
-  margin-top: 0;
-  margin-bottom: 0.8em;
-  line-height: 1.6;
-}
-
-.markdown-body :deep(p:last-child) {
-  margin-bottom: 0;
-}
-
-/* 核心修复：代码块横向滚动，绝对不撑爆父容器 */
-.markdown-body :deep(pre) {
-  max-width: 100%;
-  overflow-x: auto; /* 超出宽度出现滚动条 */
-  background-color: #282c34; /* 匹配你引入的 atom-one-dark 主题底色 */
-  padding: 12px;
-  border-radius: 8px;
-  margin: 12px 0;
-}
-
-.markdown-body :deep(code) {
-  font-family: Consolas, Monaco, "Courier New", monospace;
-  font-size: 13.5px;
-}
-
-/* 让内联代码也有背景色 */
-.markdown-body :deep(:not(pre) > code) {
-  background-color: #f3f4f6;
-  color: #eb5757;
-  padding: 2px 4px;
-  border-radius: 4px;
-  word-break: break-word;
-  white-space: pre-wrap;
-}
-
-/* 确保图片和表格也不会溢出 */
-.markdown-body :deep(img) {
-  max-width: 100%;
-  height: auto;
-  border-radius: 6px;
-}
-
-.markdown-body :deep(table) {
-  display: block;
-  width: 100%;
-  overflow-x: auto; /* 表格太宽也允许内部滑动 */
-  border-collapse: collapse;
-}
-
-.markdown-body :deep(table th),
-.markdown-body :deep(table td) {
-  border: 1px solid #e5e7eb;
-  padding: 6px 12px;
-}
-
 /* ================== 📱 移动端适配 ================== */
 .show-on-mobile { display: none; }
 @media (max-width: 768px) {
@@ -862,5 +797,67 @@ watch(() => props.show, (newVal) => {
   .pill-input-box { border-radius: 20px; padding: 6px 8px 6px 16px; }
   .pill-send-btn { width: 36px; height: 36px; }
   .pill-send-btn svg { width: 16px; height: 16px; }
+}
+
+/* ================== 🌟 Markdown 样式约束与防溢出 ================== */
+.markdown-body {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.markdown-body :deep(p) {
+  margin-top: 0;
+  margin-bottom: 0.8em;
+  line-height: 1.6;
+}
+
+.markdown-body :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+/* 核心修复：代码块横向滚动，绝对不撑爆父容器 */
+.markdown-body :deep(pre) {
+  max-width: 100%; /* 🌟 保证代码块的宽度最大就是气泡的宽度 */
+  overflow-x: auto; /* 超出宽度出现横向滚动条 */
+  background-color: #282c34;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.markdown-body :deep(code) {
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 13.5px;
+}
+
+.markdown-body :deep(:not(pre) > code) {
+  background-color: #f3f4f6;
+  color: #eb5757;
+  padding: 2px 4px;
+  border-radius: 4px;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.markdown-body :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.markdown-body :deep(table) {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.markdown-body :deep(table th),
+.markdown-body :deep(table td) {
+  border: 1px solid #e5e7eb;
+  padding: 6px 12px;
 }
 </style>
